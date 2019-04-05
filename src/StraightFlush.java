@@ -7,13 +7,13 @@
  */
 public class StraightFlush extends Hand
 {
+	private static final long serialVersionUID = 352936185401234210L;
+
 	/**
 	 * Constructor for the StraightFlush class
 	 * 
-	 * @param player
-	 * 			The player who play the StraightFlush
-	 * @param cards
-	 * 			The cards that composes the StraightFlush
+	 * @param player The player who play the StraightFlush
+	 * @param cards  The cards that composes the StraightFlush
 	 */
 	public StraightFlush (CardGamePlayer player, CardList cards)
 	{

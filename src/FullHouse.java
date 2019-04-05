@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * This is used to model a hand of FullHouse. 
@@ -9,13 +7,13 @@ import java.util.Collections;
  */
 public class FullHouse extends Hand
 {
+	private static final long serialVersionUID = -5273312878278139440L;
+
 	/**
 	 * Constructor for the FullHouse class
 	 * 
-	 * @param player
-	 * 			The player who play the FullHand
-	 * @param cards
-	 * 			The cards that composes the FullHand
+	 * @param player The player who play the FullHand
+	 * @param cards  The cards that composes the FullHand
 	 */
 	public FullHouse(CardGamePlayer player, CardList cards)
 	{

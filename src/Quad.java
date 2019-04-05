@@ -7,13 +7,13 @@
  */
 public class Quad extends Hand
 {
+	private static final long serialVersionUID = -2709724225956229438L;
+
 	/**
 	 * Constructor for the Quad class
 	 * 
-	 * @param player
-	 * 			The player who play the Quad
-	 * @param cards
-	 * 			The cards that composes the Quad
+	 * @param player The player who play the Quad
+	 * @param cards  The cards that composes the Quad
 	 */
 	public Quad (CardGamePlayer player, CardList cards)
 	{

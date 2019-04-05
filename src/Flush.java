@@ -7,13 +7,13 @@
  */
 public class Flush extends Hand
 {
+	private static final long serialVersionUID = 7212107325770237465L;
+
 	/**
 	 * Constructor for the Flush class
 	 * 
-	 * @param player
-	 * 			The player who play the Flush
-	 * @param cards
-	 * 			The cards that composes the Flush
+	 * @param player The player who play the Flush
+	 * @param cards  The cards that composes the Flush
 	 */
 	public Flush(CardGamePlayer player, CardList cards)
 	{

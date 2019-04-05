@@ -7,18 +7,18 @@
  */
 public class BigTwoCard extends Card
 {
+	private static final long serialVersionUID = -5822018182891811204L;
+
 	/**
 	 * This is the constructor for the BigTwoCard
 	 * 
-	 * @param suit
-	 * 			the suit of the given card, from 0 to 3
-	 * 			<p>
-	 *            0 = Diamond, 1 = Club, 2 = Heart, 3 = Spade
-	 * @param rank
-	 * 			the rank of the given card, from 0 to 12
-	 * 			<p>
-	 *           0 = 'A', 1 = '2', 2 = '3', ..., 8 = '9', 9 = '0', 10 = 'J', 11
-	 *           = 'Q', 12 = 'K'
+	 * @param suit the suit of the given card, from 0 to 3
+	 *             <p>
+	 *             0 = Diamond, 1 = Club, 2 = Heart, 3 = Spade
+	 * @param rank the rank of the given card, from 0 to 12
+	 *             <p>
+	 *             0 = 'A', 1 = '2', 2 = '3', ..., 8 = '9', 9 = '0', 10 = 'J', 11 =
+	 *             'Q', 12 = 'K'
 	 */
 	public BigTwoCard(int suit, int rank)
 	{

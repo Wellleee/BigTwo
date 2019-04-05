@@ -7,13 +7,13 @@
  */
 public class Single extends Hand
 {
+	private static final long serialVersionUID = 178749520333021015L;
+
 	/**
 	 * Constructor for the Single class
 	 * 
-	 * @param player
-	 * 			The player who play the Single
-	 * @param cards
-	 * 			The cards that composes the Single
+	 * @param player The player who play the Single
+	 * @param cards  The cards that composes the Single
 	 */
 	public Single(CardGamePlayer player, CardList cards)
 	{

@@ -7,10 +7,11 @@
  */
 public class BigTwoDeck extends Deck
 {
+	private static final long serialVersionUID = 8254481884293570270L;
+
 	/**
-	 * This a method for initializing a deck of Big Two cards. It should 
-	 * remove all cards from the deck, create 52 Big Two cards and add
-	 * them to the deck. 
+	 * This a method for initializing a deck of Big Two cards. It should remove all
+	 * cards from the deck, create 52 Big Two cards and add them to the deck.
 	 */
 	public void initialize()
 	{

@@ -7,13 +7,13 @@
  */
 public class Pair extends Hand
 {
+	private static final long serialVersionUID = -7735787877198652522L;
+
 	/**
 	 * Constructor for the pair class
 	 * 
-	 * @param player
-	 * 			The player who play the pair
-	 * @param cards
-	 * 			The cards that composes the pair
+	 * @param player The player who play the pair
+	 * @param cards  The cards that composes the pair
 	 */
 	public Pair(CardGamePlayer player, CardList cards)
 	{

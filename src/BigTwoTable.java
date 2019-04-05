@@ -6,7 +6,10 @@
  */
 public class BigTwoTable implements CardGameTable
 {
-
+	public BigTwoTable(CardGame cardGame)
+	{
+		//TODO
+	}
 	@Override
 	public void setActivePlayer(int activePlayer)
 	{

@@ -7,13 +7,13 @@
  */
 public class Straight extends Hand
 {
+	private static final long serialVersionUID = 4735239255262917363L;
+
 	/**
 	 * Constructor for the Straight class
 	 * 
-	 * @param player
-	 * 			The player who play the Straight
-	 * @param cards
-	 * 			The cards that composes the Straight
+	 * @param player The player who play the Straight
+	 * @param cards  The cards that composes the Straight
 	 */
 	public Straight(CardGamePlayer player, CardList cards)
 	{

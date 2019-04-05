@@ -9,7 +9,8 @@
  */
 public abstract class Hand extends CardList 
 {
-	private CardGamePlayer player; //the player who plays this hand
+	private static final long serialVersionUID = 3708415018664975012L;
+	private CardGamePlayer player; // the player who plays this hand
 	/**
 	 * Constructor for the hand class
 	 * 

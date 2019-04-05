@@ -7,13 +7,13 @@
  */
 public class Triple extends Hand
 {
+	private static final long serialVersionUID = 2109395258622002051L;
+
 	/**
 	 * Constructor for the triple class
 	 * 
-	 * @param player
-	 * 			The player who play the triple
-	 * @param cards
-	 * 			The cards that composes the triple
+	 * @param player The player who play the triple
+	 * @param cards  The cards that composes the triple
 	 */
 	public Triple (CardGamePlayer player, CardList cards)
 	{

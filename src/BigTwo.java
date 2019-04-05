@@ -23,14 +23,14 @@ public class BigTwo implements CardGame
 			CardGamePlayer gamePlayer = new CardGamePlayer("Player"+i);
 			playerList.add(gamePlayer);
 		}
-		bigTwoConsole = new BigTwoConsole(this);
+		bigTwoTable = new BigTwoTable(this);
 	}
 	
 	private Deck deck; //a deck of cards
 	private ArrayList<CardGamePlayer> playerList; //a list of player
 	private ArrayList<Hand> handsOnTable; //a list of hands
 	private int currentIdx; //an integer specifying the index of the current player
-	private BigTwoConsole bigTwoConsole; //a BigTwoConsole object for providing the user interface
+	private BigTwoTable bigTwoTable; //a BigTwoConsole object for providing the user interface
 	
 	/**
 	 * A method for retrieving the deck of cards being used
@@ -75,7 +75,8 @@ public class BigTwo implements CardGame
 	{
 		return this.currentIdx;
 	}
-	
+
+	@Override
 	/**
 	 * A method for starting the game with a (shuffled) deck of
 	 * cards supplied as the argument. It implements the Big Two
@@ -84,7 +85,7 @@ public class BigTwo implements CardGame
 	 * @param deck
 	 * 			The shuffled deck of cards
 	 */
-	public void start(BigTwoDeck deck)
+	public void start(Deck deck)
 	{
 		for(int i=0;i<playerList.size();i++)
 		{
@@ -109,8 +110,8 @@ public class BigTwo implements CardGame
 			playerList.get(i).sortCardsInHand();
 		}
 		//Interaction begin
-		bigTwoConsole.setActivePlayer(currentIdx);
-		bigTwoConsole.repaint();
+		bigTwoTable.setActivePlayer(currentIdx);
+		bigTwoTable.repaint();
 		boolean someOneWin = false;
 		while(!someOneWin)
 		{
@@ -126,7 +127,7 @@ public class BigTwo implements CardGame
 			//then, add it to the handsOnTalbe and elimate the correspoding cards from the player
 			while(!legalMove)
 			{
-				int cardsIdx [] = bigTwoConsole.getSelected();
+				int cardsIdx [] = bigTwoTable.getSelected();
 				if(cardsIdx==null) //pass
 				{
 					pass = handsOnTable.size()==0 || handsOnTable.get(handsOnTable.size()-1).getPlayer()==playerList.get(currentIdx)?
@@ -180,8 +181,8 @@ public class BigTwo implements CardGame
 			}//END: check for the number of cards in hand
 
 			currentIdx = (currentIdx+1)%4;
-			bigTwoConsole.setActivePlayer(currentIdx);
-			bigTwoConsole.repaint();
+			bigTwoTable.setActivePlayer(currentIdx);
+			bigTwoTable.repaint();
 		}//END: every turn
 		System.out.println("Game ends");
 		for(int i=0;i<playerList.size();i++)
@@ -276,13 +277,6 @@ public class BigTwo implements CardGame
 	{
 		// TODO Auto-generated method stub
 		return 0;
-	}
-
-	@Override
-	public void start(Deck deck)
-	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
