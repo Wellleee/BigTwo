@@ -275,8 +275,7 @@ public class BigTwo implements CardGame
 	@Override
 	public int getNumOfPlayers()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return this.playerList.size();
 	}
 
 	@Override
