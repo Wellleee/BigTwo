@@ -1,3 +1,4 @@
+import java.awt.BorderLayout;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -6,8 +7,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
@@ -17,92 +24,191 @@ import javax.swing.JTextArea;
  * @author davidliu
  *
  */
-public class BigTwoTable implements CardGameTable {
+public class BigTwoTable implements CardGameTable
+{
 	private final static int MAX_CARD_NUM = 13; // maximum num of cards
+	private final static int HORIZONTAL_DIST_OF_CARDS = 10; //x in the playerboard
+	private final static int EACH_CARD_EDGE = 10;
 
-	public BigTwoTable(CardGame cardGame) {
-		// TODO
+	//The GUI Table is created. 
+	public BigTwoTable(CardGame cardGame)
+	{
+		this.game = cardGame;
+		
+		/*Main GUI frame*/
+		frame = new JFrame("Big Two");
+		
+		/*menu bar*/
+		menuBar = new JMenuBar();
+		gamMenu = new JMenu("Game");
+		menuBar.add(gamMenu);
+		restarItem = new JMenuItem("Restart");
+		quitItem = new JMenuItem("Quit");
+		gamMenu.add(restarItem);
+		gamMenu.add(quitItem);
+
+		/*left panel*/
+		playingPanel = new JPanel(new BoxLayout(playingPanel, BoxLayout.Y_AXIS));
+		playBoards = new PlayerBoard [game.getNumOfPlayers()];
+		clickable = false;
+		for(int i=0; i<game.getNumOfPlayers(); i++)
+		{
+			playBoards[i] = new PlayerBoard(i); //to be drawn
+			playingPanel.add(playingPanel.add(playBoards[i]));
+		}
+		handsBoard = new JPanel(); //to be drawn
+		playingPanel.add(handsBoard);
+		buttonBoard = new JPanel(); //Flow layout
+		playButton = new JButton("Play");
+		passButton = new JButton("Pass");
+		buttonBoard.add(playButton);
+		buttonBoard.add(passButton);
+		playingPanel.add(buttonBoard);
+		//add all of the above components to the frame;
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.add(menuBar, BorderLayout.NORTH);
+		frame.add(msgArea, BorderLayout.EAST);
+		frame.add(playingPanel,BorderLayout.CENTER);
+
+		frame.setVisible(true);
 	}
 
-	private ArrayList<CardGamePlayer> playerList; // the list of players
-	private ArrayList<Hand> handsOnTable; // the list of hands played on the table
-	private int activePlayer = -1; // the current active player
 	private CardGame game; // the bigtwo game
 	private boolean[] selected; // which cards are selected
+	private int activePlayer; //idx of currently active player
 
 	private JFrame frame; // main window
-	private JPanel cardPanel; // panel for showing cards
-	private JPanel msgPanel; // panel for the current status
-	private JButton playButton; // button to play a hand
-	private JButton passButton; // button to pass to the next player
-	private JPanel msgArea; // panel to show the message after each game
-	private Image[][] cardImage;// storing the card images
-	private Image cardBackImage;// storing the card back image
-	private Image[] avatars; // storing the avatars image
+
+	private JMenuBar menuBar; //menu bar
+	private JMenu gamMenu; //game menu
+	private JMenuItem restarItem; // restart under the game menu
+	private JMenuItem quitItem; // quit the game
+
+	private JTextArea msgArea; //space for output the game info
+
+	private JPanel playingPanel; //panel for cards, hands and buttons
+	private boolean clickable;
+	private PlayerBoard [] playBoards; //all the four players
+	private JPanel handsBoard; //showing the top of hands on table
+	private JPanel buttonBoard; //showing the Play and the Pass button
+
+	private JButton playButton;
+	private JButton passButton; //buttons in the button board
+
 
 	@Override
-	public void setActivePlayer(int activePlayer) {
-		if (activePlayer < 0 || activePlayer >= playerList.size()) {
+	public void setActivePlayer(int activePlayer)
+	{
+		if (activePlayer < 0 || activePlayer >= game.getNumOfPlayers())
+		{
 			this.activePlayer = -1;
-		} else {
+		}
+		else
+		{
 			this.activePlayer = activePlayer;
 		}
 
 	}
 
 	@Override
-	public int[] getSelected() {
-		// TODO Auto-generated method stub
-		CardGamePlayer currentPlayer = playerList.get(this.activePlayer);
-		return null;
+	public int[] getSelected()
+	{
+		ArrayList<Integer> selectedCardList = new ArrayList<Integer>();
+		for(int i=0;i<this.selected.length;i++)
+		{
+			if(selected[i])
+				selectedCardList.add(i);
+		}
+		int [] selectedCards = new int [selectedCardList.size()];
+		for(int cardIdx:selectedCardList)
+		{
+			selectedCards[selectedCardList.indexOf(cardIdx)] = cardIdx;
+		}
+		return selectedCards;
 	}
 
 	@Override
-	public void resetSelected() {
-		// TODO Auto-generated method stub
-
+	public void resetSelected()
+	{
+		for(int i=0; i<selected.length; i++)
+		{
+			selected[i] = false;
+		}
 	}
 
 	@Override
-	public void repaint() {
-		// TODO Auto-generated method stub
-
+	public void repaint()
+	{
+		// implementation of GUI.go()
+		this.buttonBoard.repaint();
+		this.handsBoard.repaint();
+		for(int i=0;i<playBoards.length;i++)
+		{
+			playBoards[i].repaint();
+		}
+		this.playingPanel.repaint();
 	}
 
 	@Override
-	public void printMsg(String msg) {
+	public void printMsg(String msg)
+	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
-	public void clearMsgArea() {
-		// TODO Auto-generated method stub
-
+	public void clearMsgArea()
+	{
+		msgArea.setText(null);
 	}
 
 	@Override
-	public void reset() {
+	public void reset()
+	{
 		// TODO Auto-generated method stub
-
+		//first remove all the hands on table
+		for(int i=0;i<game.getHandsOnTable().size();i++)
+			game.getHandsOnTable().remove(i);
+		//then remove all the cards from the players
+		for(int i=0; i<game.getNumOfPlayers();i++)
+			game.getPlayerList().get(i).removeAllCards();
+		//then reset the cards
+		
 	}
 
 	@Override
-	public void enable() {
-		// TODO Auto-generated method stub
-
+	public void enable()
+	{
+		this.clickable = true;
+		passButton.addActionListener(new PassButtonListener());
+		playButton.addActionListener(new PlayButtonListener());
 	}
 
 	@Override
-	public void disable() {
-		// TODO Auto-generated method stub
-
+	public void disable()
+	{
+		this.clickable = false;
+		passButton.removeActionListener(new PassButtonListener());
+		playButton.removeActionListener(new PlayButtonListener());
 	}
 	/**
 	 * The inner class for the behaviour of the cardPanel
 	 */
-	class BigTwoPanel extends JPanel implements MouseListener
+	class PlayerBoard extends JPanel implements MouseListener
 	{
+		private static final long serialVersionUID = -1414283557475818226L;
+		private int playerIdx;
+		private boolean [] beClicked;
+		PlayerBoard(int playerIdx)
+		{
+			this.playerIdx = playerIdx;
+			this.beClicked = new boolean [game.getPlayerList().get(playerIdx).getNumOfCards()];
+			for(int i=0;i<beClicked.length;i++)
+			{
+				beClicked[i]=false;
+			}
+		}
+
 		@Override
 		public void mouseClicked(MouseEvent e)
 		{
@@ -112,32 +218,42 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		protected void paintComponent(Graphics g)
 		{
-			//TODO
+			if(this.playerIdx==activePlayer)
+			{
+				Image cardImage = null;
+				for(int i=0; i<game.getPlayerList().get(this.playerIdx).getNumOfCards(); i++)
+				{
+					Card card = game.getPlayerList().get(this.playerIdx).getCardsInHand().getCard(i);
+					int rank = card.getRank();
+					int suit = card.getSuit();
+					String pathToIcon = "../img/pukeImage/"+suit+"_"+rank+".png";
+					cardImage = new ImageIcon(pathToIcon).getImage();
+					g.drawImage(cardImage, selected[i]?0:HORIZONTAL_DIST_OF_CARDS, 40+i*EACH_CARD_EDGE, this);
+				}
+			}
+			else
+			{
+				Image cardBackImage = new ImageIcon("../img/pukeImage/back.png").getImage();
+				for(int i=0; i<game.getPlayerList().get(this.playerIdx).getNumOfCards(); i++)
+				{
+					g.drawImage(cardBackImage,HORIZONTAL_DIST_OF_CARDS,40+i*EACH_CARD_EDGE,this);
+				}
+			}
+			Image avactorImage = new ImageIcon("../img/Avator/"+playerIdx+".png").getImage();
+			g.drawImage(avactorImage, 0, 0, this);
 		}
 
 		@Override
-		public void mousePressed(MouseEvent e)
-		{
-			//nothing to be done
-		}
+		public void mousePressed(MouseEvent e){}
 
 		@Override
-		public void mouseReleased(MouseEvent e)
-		{
-			//nothing to be done
-		}
+		public void mouseReleased(MouseEvent e){}
 
 		@Override
-		public void mouseEntered(MouseEvent e)
-		{
-			//nothing to be done
-		}
+		public void mouseEntered(MouseEvent e){}
 
 		@Override
-		public void mouseExited(MouseEvent e)
-		{
-			//nothing to be done
-		}
+		public void mouseExited(MouseEvent e){}
 	}
 	/**
 	 * Realize the behaviour of the play button when it is pressed
@@ -147,7 +263,13 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			//TODO	
+			for(int i=0;i<game.getPlayerList().get(activePlayer).getNumOfCards();i++)
+			{
+				selected[i]=playBoards[activePlayer].beClicked[i];
+			}
+			activePlayer++;
+			activePlayer %= game.getNumOfPlayers();
+			frame.repaint();
 		}
 	}
 	/**
@@ -158,7 +280,10 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			//TODO
+			resetSelected();
+			activePlayer++;
+			activePlayer %= game.getNumOfPlayers();
+			frame.repaint();
 		}
 	}
 	/**
@@ -170,7 +295,25 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			//TODO
+			disable();
+			reset();
+			JFrame popUpMsg = new JFrame("Restarting...");
+			JLabel restarting = new JLabel("The game is restarted");
+			popUpMsg.add(restarting);
+			popUpMsg.setVisible(true);
+			for(int t=0;t<9;t++)
+			{
+				try
+				{
+					Thread.sleep(500);
+				} catch (Exception E) {}
+				if(t%3==0)			restarting.setText("The game is restarted.");
+				else if(t%3==1)		restarting.setText("The game is restarted..");
+				else				restarting.setText("The game is restarted...");
+			}
+			popUpMsg.setVisible(false);
+			frame.repaint();
+			enable();
 		}
 	}
 	/**
@@ -182,7 +325,9 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			//TODO
+			disable();
+			frame.setVisible(false);
+			System.exit(0);
 		}
 	}
 }
