@@ -29,6 +29,8 @@ public class BigTwoTable implements CardGameTable
 	private final static int MAX_CARD_NUM = 13; // maximum num of cards
 	private final static int HORIZONTAL_DIST_OF_CARDS = 10; //x in the playerboard
 	private final static int EACH_CARD_EDGE = 10;
+	private final static int DIST_FOR_AVATRO_X = 40;
+	private final static int WIDTH_OF_CARDS = 105; //unit: pxiel
 
 	//The GUI Table is created. 
 	public BigTwoTable(CardGame cardGame)
@@ -56,7 +58,7 @@ public class BigTwoTable implements CardGameTable
 			playBoards[i] = new PlayerBoard(i); //to be drawn
 			playingPanel.add(playingPanel.add(playBoards[i]));
 		}
-		handsBoard = new JPanel(); //to be drawn
+		handsBoard = new HandsBoard(); //to be drawn
 		playingPanel.add(handsBoard);
 		buttonBoard = new JPanel(); //Flow layout
 		playButton = new JButton("Play");
@@ -74,7 +76,7 @@ public class BigTwoTable implements CardGameTable
 	}
 
 	private CardGame game; // the bigtwo game
-	private boolean[] selected; // which cards are selected
+	private boolean[] selected; // which cards are selected by the PREVIOUS player
 	private int activePlayer; //idx of currently active player
 
 	private JFrame frame; // main window
@@ -89,7 +91,7 @@ public class BigTwoTable implements CardGameTable
 	private JPanel playingPanel; //panel for cards, hands and buttons
 	private boolean clickable;
 	private PlayerBoard [] playBoards; //all the four players
-	private JPanel handsBoard; //showing the top of hands on table
+	private HandsBoard handsBoard; //showing the top of hands on table
 	private JPanel buttonBoard; //showing the Play and the Pass button
 
 	private JButton playButton;
@@ -113,6 +115,7 @@ public class BigTwoTable implements CardGameTable
 	@Override
 	public int[] getSelected()
 	{
+		//the returned array is generated from the results of the play button. 
 		ArrayList<Integer> selectedCardList = new ArrayList<Integer>();
 		for(int i=0;i<this.selected.length;i++)
 		{
@@ -153,7 +156,6 @@ public class BigTwoTable implements CardGameTable
 	public void printMsg(String msg)
 	{
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -165,7 +167,6 @@ public class BigTwoTable implements CardGameTable
 	@Override
 	public void reset()
 	{
-		// TODO Auto-generated method stub
 		//first remove all the hands on table
 		for(int i=0;i<game.getHandsOnTable().size();i++)
 			game.getHandsOnTable().remove(i);
@@ -188,8 +189,8 @@ public class BigTwoTable implements CardGameTable
 	public void disable()
 	{
 		this.clickable = false;
-		passButton.removeActionListener(new PassButtonListener());
-		playButton.removeActionListener(new PlayButtonListener());
+		passButton.removeActionListener(passButton.getActionListeners()[0]);
+		playButton.removeActionListener(playButton.getActionListeners()[0]);
 	}
 	/**
 	 * The inner class for the behaviour of the cardPanel
@@ -228,7 +229,7 @@ public class BigTwoTable implements CardGameTable
 					int suit = card.getSuit();
 					String pathToIcon = "../img/pukeImage/"+suit+"_"+rank+".png";
 					cardImage = new ImageIcon(pathToIcon).getImage();
-					g.drawImage(cardImage, selected[i]?0:HORIZONTAL_DIST_OF_CARDS, 40+i*EACH_CARD_EDGE, this);
+					g.drawImage(cardImage, selected[i]?0:HORIZONTAL_DIST_OF_CARDS, DIST_FOR_AVATRO_X+i*EACH_CARD_EDGE, this);
 				}
 			}
 			else
@@ -256,6 +257,27 @@ public class BigTwoTable implements CardGameTable
 		public void mouseExited(MouseEvent e){}
 	}
 	/**
+	 * The inner class for the behaviour of the borad for hands
+	 */
+	class HandsBoard extends JPanel
+	{
+		@Override
+		protected void paintComponent(Graphics g)
+		{
+			Image cardImage = null;
+			Hand currentHand = game.getHandsOnTable().get(game.getHandsOnTable().size()-1);
+			for(int i=0;i<currentHand.size();i++)
+			{
+				Card cardInHand = currentHand.getCard(i);
+				int rank = cardInHand.getRank();
+				int suit = cardInHand.getSuit();
+				String pathToIcon = "../img/pukeImage/"+suit+"_"+rank+".png";
+				cardImage = new ImageIcon(pathToIcon).getImage();
+				g.drawImage(cardImage, HORIZONTAL_DIST_OF_CARDS, i*EACH_CARD_EDGE, this);
+			}
+		}
+	}
+	/**
 	 * Realize the behaviour of the play button when it is pressed
 	 */
 	class PlayButtonListener implements ActionListener
@@ -263,13 +285,7 @@ public class BigTwoTable implements CardGameTable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			for(int i=0;i<game.getPlayerList().get(activePlayer).getNumOfCards();i++)
-			{
-				selected[i]=playBoards[activePlayer].beClicked[i];
-			}
-			activePlayer++;
-			activePlayer %= game.getNumOfPlayers();
-			frame.repaint();
+			//TODO
 		}
 	}
 	/**
