@@ -165,15 +165,28 @@ public class BigTwoTable implements CardGameTable
 	@Override
 	public void reset()
 	{
-		// TODO Auto-generated method stub
 		//first remove all the hands on table
-		for(int i=0;i<game.getHandsOnTable().size();i++)
-			game.getHandsOnTable().remove(i);
+		game.getHandsOnTable().clear();
 		//then remove all the cards from the players
 		for(int i=0; i<game.getNumOfPlayers();i++)
 			game.getPlayerList().get(i).removeAllCards();
 		//then reset the cards
-		
+		game.getDeck().initialize();
+		game.getDeck().shuffle();
+		for(int i=0;i<13;i++)
+		{
+			for(int j=0;j<game.getPlayerList().size();j++)
+			{
+				Card card = game.getDeck().removeCard(0);
+				game.getPlayerList().get(j).addCard(card);
+				if(card.getRank()==2 && card.getSuit()==0)
+					activePlayer = j; //the one with Diamond 3 is the first player
+			}
+		}
+		for(int i=0;i<game.getPlayerList().size();i++)
+		{
+			game.getPlayerList().get(i).sortCardsInHand();
+		}
 	}
 
 	@Override
