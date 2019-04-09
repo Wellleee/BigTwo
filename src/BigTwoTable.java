@@ -30,7 +30,8 @@ public class BigTwoTable implements CardGameTable
 	private final static int HORIZONTAL_DIST_OF_CARDS = 10; //x in the playerboard
 	private final static int EACH_CARD_EDGE = 10;
 	private final static int DIST_FOR_AVATRO_X = 40;
-	private final static int WIDTH_OF_CARDS = 105; //unit: pxiel
+	private final static int WIDTH_OF_CARDS = 105; //unit: pixel
+	private final static int HEIGHT_OF_CARDS = 150; //unit: pixel
 
 	//The GUI Table is created. 
 	public BigTwoTable(CardGame cardGame)
@@ -53,6 +54,7 @@ public class BigTwoTable implements CardGameTable
 		playingPanel = new JPanel(new BoxLayout(playingPanel, BoxLayout.Y_AXIS));
 		playBoards = new PlayerBoard [game.getNumOfPlayers()];
 		clickable = false;
+		disclosing = false;
 		for(int i=0; i<game.getNumOfPlayers(); i++)
 		{
 			playBoards[i] = new PlayerBoard(i); //to be drawn
@@ -90,6 +92,7 @@ public class BigTwoTable implements CardGameTable
 
 	private JPanel playingPanel; //panel for cards, hands and buttons
 	private boolean clickable;
+	private boolean disclosing;//disclosing all the players' card
 	private PlayerBoard [] playBoards; //all the four players
 	private HandsBoard handsBoard; //showing the top of hands on table
 	private JPanel buttonBoard; //showing the Play and the Pass button
@@ -97,6 +100,15 @@ public class BigTwoTable implements CardGameTable
 	private JButton playButton;
 	private JButton passButton; //buttons in the button board
 
+	/**
+	 * Retirve the index of the currently active player
+	 * 
+	 * @return the activePlayer
+	 */
+	public int getActivePlayer()
+	{
+		return activePlayer;
+	}
 
 	@Override
 	public void setActivePlayer(int activePlayer)
@@ -104,12 +116,22 @@ public class BigTwoTable implements CardGameTable
 		if (activePlayer < 0 || activePlayer >= game.getNumOfPlayers())
 		{
 			this.activePlayer = -1;
+			selected = null;
 		}
 		else
 		{
 			this.activePlayer = activePlayer;
+			selected = new boolean [game.getPlayerList().get(activePlayer).getNumOfCards()];
 		}
+		frame.repaint();
+	}
 
+	/**
+	 * showing all the players' card
+	 */
+	public void discloseAllPlayers()
+	{
+		this.disclosing = true;
 	}
 
 	@Override
@@ -133,6 +155,7 @@ public class BigTwoTable implements CardGameTable
 	@Override
 	public void resetSelected()
 	{
+		//not changing activelayer, thus no need to re-declare an array
 		for(int i=0; i<selected.length; i++)
 		{
 			selected[i] = false;
@@ -155,7 +178,7 @@ public class BigTwoTable implements CardGameTable
 	@Override
 	public void printMsg(String msg)
 	{
-		// TODO Auto-generated method stub
+		this.msgArea.append(msg);
 	}
 
 	@Override
@@ -175,7 +198,7 @@ public class BigTwoTable implements CardGameTable
 		//then reset the cards
 		game.getDeck().initialize();
 		game.getDeck().shuffle();
-		for(int i=0;i<13;i++)
+		for(int i=0;i<MAX_CARD_NUM;i++)
 		{
 			for(int j=0;j<game.getPlayerList().size();j++)
 			{
@@ -185,6 +208,7 @@ public class BigTwoTable implements CardGameTable
 					activePlayer = j; //the one with Diamond 3 is the first player
 			}
 		}
+		//TODO: animation of distributing cards
 		for(int i=0;i<game.getPlayerList().size();i++)
 		{
 			game.getPlayerList().get(i).sortCardsInHand();
@@ -213,27 +237,46 @@ public class BigTwoTable implements CardGameTable
 	{
 		private static final long serialVersionUID = -1414283557475818226L;
 		private int playerIdx;
-		private boolean [] beClicked;
 		PlayerBoard(int playerIdx)
 		{
 			this.playerIdx = playerIdx;
-			this.beClicked = new boolean [game.getPlayerList().get(playerIdx).getNumOfCards()];
-			for(int i=0;i<beClicked.length;i++)
-			{
-				beClicked[i]=false;
-			}
 		}
 
 		@Override
 		public void mouseClicked(MouseEvent e)
 		{
-			//TODO
+			if(clickable)
+			{
+				int idxOfCard = -1;
+				int xMouse = e.getX()-DIST_FOR_AVATRO_X; //x-dist relative to the left-most edge of cards
+				int yMouse = e.getY();
+				if(xMouse < EACH_CARD_EDGE*(selected.length-1) && xMouse>=0)
+				{
+					idxOfCard = (int)xMouse/EACH_CARD_EDGE;
+				}
+				else if(xMouse < EACH_CARD_EDGE*(selected.length-1)+WIDTH_OF_CARDS)
+				{
+					idxOfCard = selected.length-1;
+				}
+				if(idxOfCard < 0 || idxOfCard >= selected.length)	return;
+				//then check for the y-coordinate
+				if(selected[idxOfCard])//being selected
+				{
+					if(yMouse>0 && yMouse<HEIGHT_OF_CARDS)	selected[idxOfCard]=false;
+				}
+				else//not being selected
+				{
+					if(yMouse>HORIZONTAL_DIST_OF_CARDS && yMouse<HORIZONTAL_DIST_OF_CARDS+HEIGHT_OF_CARDS)
+						selected[idxOfCard] = true;
+				}
+				frame.repaint();
+			}
 		}
 
 		@Override
 		protected void paintComponent(Graphics g)
 		{
-			if(this.playerIdx==activePlayer)
+			if(this.playerIdx==activePlayer || disclosing)
 			{
 				Image cardImage = null;
 				for(int i=0; i<game.getPlayerList().get(this.playerIdx).getNumOfCards(); i++)
@@ -251,7 +294,7 @@ public class BigTwoTable implements CardGameTable
 				Image cardBackImage = new ImageIcon("../img/pukeImage/back.png").getImage();
 				for(int i=0; i<game.getPlayerList().get(this.playerIdx).getNumOfCards(); i++)
 				{
-					g.drawImage(cardBackImage,HORIZONTAL_DIST_OF_CARDS,40+i*EACH_CARD_EDGE,this);
+					g.drawImage(cardBackImage,HORIZONTAL_DIST_OF_CARDS,DIST_FOR_AVATRO_X+i*EACH_CARD_EDGE,this);
 				}
 			}
 			Image avactorImage = new ImageIcon("../img/Avator/"+playerIdx+".png").getImage();
@@ -275,6 +318,7 @@ public class BigTwoTable implements CardGameTable
 	 */
 	class HandsBoard extends JPanel
 	{
+		private static final long serialVersionUID = -8603899012460768388L;
 		@Override
 		protected void paintComponent(Graphics g)
 		{
@@ -299,7 +343,8 @@ public class BigTwoTable implements CardGameTable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			//TODO
+			game.makeMove(activePlayer, getSelected());
+			frame.repaint();
 		}
 	}
 	/**
@@ -310,9 +355,7 @@ public class BigTwoTable implements CardGameTable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			resetSelected();
-			activePlayer++;
-			activePlayer %= game.getNumOfPlayers();
+			game.makeMove(activePlayer, null);
 			frame.repaint();
 		}
 	}

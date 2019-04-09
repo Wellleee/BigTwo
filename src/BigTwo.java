@@ -29,7 +29,6 @@ public class BigTwo implements CardGame
 	private Deck deck; //a deck of cards
 	private ArrayList<CardGamePlayer> playerList; //a list of player
 	private ArrayList<Hand> handsOnTable; //a list of hands
-	private int currentIdx; //an integer specifying the index of the current player
 	private BigTwoTable bigTwoTable; //a BigTwoConsole object for providing the user interface
 	
 	/**
@@ -73,7 +72,7 @@ public class BigTwo implements CardGame
 	 */
 	public int getCurrentIdx()
 	{
-		return this.currentIdx;
+		return bigTwoTable.getActivePlayer();
 	}
 
 	@Override
@@ -91,7 +90,7 @@ public class BigTwo implements CardGame
 		{
 			playerList.get(i).removeAllCards();
 		}
-		this.currentIdx = -1;
+		int currentIdx = -1; // starting player
 		this.deck = deck;
 		handsOnTable.clear();
 		//then distribute the cards
@@ -109,90 +108,10 @@ public class BigTwo implements CardGame
 		{
 			playerList.get(i).sortCardsInHand();
 		}
+		//TODO: starting animation
 		//Interaction begin
 		bigTwoTable.setActivePlayer(currentIdx);
 		bigTwoTable.repaint();
-		boolean someOneWin = false;
-		while(!someOneWin)
-		{
-			//each turn
-			boolean legalMove = false;
-			boolean pass	= false;
-			Hand currentHand = null;
-			CardList cardsElement = null;
-
-			//first select the cards to compose a valid hand
-			//once a valid hand is composed, try to beat the upmost hand on table
-			//now, a hand that can beats the upmost hand on table is generated
-			//then, add it to the handsOnTalbe and elimate the correspoding cards from the player
-			while(!legalMove)
-			{
-				int cardsIdx [] = bigTwoTable.getSelected();
-				if(cardsIdx==null) //pass
-				{
-					pass = handsOnTable.size()==0 || handsOnTable.get(handsOnTable.size()-1).getPlayer()==playerList.get(currentIdx)?
-					       false:true;
-					//player for last hand == current player ? pass is illegal : pass is legal
-					legalMove = pass;
-				}
-				else
-				{
-					cardsElement = playerList.get(currentIdx).play(cardsIdx);
-					currentHand  = composeHand(playerList.get(currentIdx),cardsElement);
-					if(currentHand!=null)//null hand i.e. invalid hand
-					{
-						if(handsOnTable.size()==0) //first player
-						{
-							legalMove = currentHand.contains(new BigTwoCard(0,2));
-						}
-						else if(handsOnTable.get(handsOnTable.size()-1).getPlayer()==playerList.get(currentIdx)) //player of the last hand
-						{
-							legalMove = true;//if the current player is the one who made the last move, he can play anything
-						}
-						else
-						{
-							legalMove = currentHand.beats(handsOnTable.get(handsOnTable.size()-1));
-						}//	END: whether it is legal
-					}//END: whether it is valid
-				}//END: whether it is a legal pass, a legal move or an illegal move
-				if(!legalMove)	System.out.println("Not a legal move");
-			}
-			
-			if(pass)	System.out.println("{pass}");
-			else
-			{
-				System.out.print("{"+currentHand.getType()+"} ");
-				for(int i=0;i<currentHand.size()-1;i++)
-				{
-					System.out.print("["+currentHand.getCard(i).toString()+"] ");
-				}
-				System.out.print("["+currentHand.getCard(currentHand.size()-1).toString()+"]\n");
-				handsOnTable.add(currentHand);
-				playerList.get(currentIdx).removeCards(cardsElement);
-			}//END: print out the current hand and add it to the table
-			//After each turn, check for the end
-			for(CardGamePlayer onePlayer : playerList)
-			{
-				if(onePlayer.getCardsInHand().isEmpty())
-				{
-					someOneWin = true;
-					break;
-				}
-			}//END: check for the number of cards in hand
-
-			currentIdx = (currentIdx+1)%4;
-			bigTwoTable.setActivePlayer(currentIdx);
-			bigTwoTable.repaint();
-		}//END: every turn
-		System.out.println("Game ends");
-		for(int i=0;i<playerList.size();i++)
-		{
-			System.out.print("Player "+i+" ");
-			if(playerList.get(i).getCardsInHand().isEmpty())
-				System.out.print("wins the game.\n");
-			else
-				System.out.print("has "+playerList.get(i).getCardsInHand().size()+" cards in hand.\n");
-		}//END: final print
 	}
 	
 	/**
@@ -281,21 +200,82 @@ public class BigTwo implements CardGame
 	@Override
 	public void makeMove(int playerID, int[] cardIdx)
 	{
-		// TODO Auto-generated method stub
+		checkMove(playerID, cardIdx);
 		
 	}
 
 	@Override
 	public void checkMove(int playerID, int[] cardIdx)
 	{
-		// TODO Auto-generated method stub
-		
+		CardGamePlayer player = playerList.get(playerID);
+		CardList cardInHand = player.play(cardIdx);
+		boolean legalMove = false;
+		if(cardInHand != null) // not a pass
+		{
+			Hand hand = composeHand(player, cardInHand);
+			if(hand != null) //not invalid
+			{
+				if(handsOnTable.size()==0 && hand.contains(new BigTwoCard(0, 2)))//first player
+				{
+					legalMove = true;
+				}
+				if(hand.beats(handsOnTable.get(handsOnTable.size()-1)) || 
+				   handsOnTable.get(handsOnTable.size()-1).getPlayer() == player)
+				//win or pass to the same person
+				{
+					legalMove = true;	
+				}
+			}//end of legal checking
+			if(legalMove)
+			{
+				handsOnTable.add(hand);
+				player.removeCards(cardInHand);
+				bigTwoTable.printMsg("{"+hand.getType()+"} ");
+				for(int i=0;i<hand.size()-1;i++)
+				{
+					bigTwoTable.printMsg("["+hand.getCard(i).toString()+"] ");
+				}
+				bigTwoTable.printMsg("["+hand.getCard(hand.size()-1).toString()+"]\n");
+			}
+			else
+			{
+				bigTwoTable.printMsg("Not a legal move");
+			}//end of a non-pass moving
+		}
+		else //pass
+		{
+			bigTwoTable.printMsg("{Pass}");
+		}
+		bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
+		//bigTwoTable.repaint() ---- no need, already included in setActiveplayer
+		if(endOfGame())
+		{
+			bigTwoTable.printMsg("Game ends");
+			for(int i=0;i<playerList.size();i++)
+			{
+				bigTwoTable.printMsg("Player "+i+" ");
+				if(playerList.get(i).getCardsInHand().isEmpty())
+					bigTwoTable.printMsg("wins the game.\n");
+				else
+					bigTwoTable.printMsg("has "+playerList.get(i).getCardsInHand().size()+" cards in hand.\n");
+			}//END: final print
+			bigTwoTable.disable();
+			bigTwoTable.discloseAllPlayers();
+			bigTwoTable.repaint();
+		}
 	}
 
 	@Override
 	public boolean endOfGame()
 	{
-		// TODO Auto-generated method stub
+		//check for the end
+		for(CardGamePlayer onePlayer : playerList)
+		{
+			if(onePlayer.getCardsInHand().isEmpty())
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 }
