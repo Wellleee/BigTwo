@@ -110,6 +110,7 @@ public class BigTwo implements CardGame
 		}
 		//TODO: starting animation
 		//Interaction begin
+		bigTwoTable.enable();
 		bigTwoTable.setActivePlayer(currentIdx);
 		bigTwoTable.repaint();
 	}

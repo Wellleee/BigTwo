@@ -1,4 +1,5 @@
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -47,20 +48,24 @@ public class BigTwoTable implements CardGameTable
 		menuBar.add(gamMenu);
 		restarItem = new JMenuItem("Restart");
 		quitItem = new JMenuItem("Quit");
+		restarItem.addActionListener(new RestartMenuItemListener());
+		quitItem.addActionListener(new QuitMenuItemListener());
 		gamMenu.add(restarItem);
 		gamMenu.add(quitItem);
 
 		/*left panel*/
-		playingPanel = new JPanel(new BoxLayout(playingPanel, BoxLayout.Y_AXIS));
+		playingPanel = new JPanel();
 		playBoards = new PlayerBoard [game.getNumOfPlayers()];
 		clickable = false;
 		disclosing = false;
 		for(int i=0; i<game.getNumOfPlayers(); i++)
 		{
 			playBoards[i] = new PlayerBoard(i); //to be drawn
+			playBoards[i].setBackground(Color.GREEN);
 			playingPanel.add(playingPanel.add(playBoards[i]));
 		}
 		handsBoard = new HandsBoard(); //to be drawn
+		handsBoard.setForeground(Color.GREEN);
 		playingPanel.add(handsBoard);
 		buttonBoard = new JPanel(); //Flow layout
 		playButton = new JButton("Play");
@@ -68,12 +73,16 @@ public class BigTwoTable implements CardGameTable
 		buttonBoard.add(playButton);
 		buttonBoard.add(passButton);
 		playingPanel.add(buttonBoard);
+		playingPanel.setLayout(new BoxLayout(playingPanel, BoxLayout.Y_AXIS));
+		/*Right message area*/
+		msgArea = new JTextArea("New Game");
 		//add all of the above components to the frame;
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.add(menuBar, BorderLayout.NORTH);
 		frame.add(msgArea, BorderLayout.EAST);
 		frame.add(playingPanel,BorderLayout.CENTER);
 
+		frame.setSize(800, 400);
 		frame.setVisible(true);
 	}
 
@@ -284,20 +293,20 @@ public class BigTwoTable implements CardGameTable
 					Card card = game.getPlayerList().get(this.playerIdx).getCardsInHand().getCard(i);
 					int rank = card.getRank();
 					int suit = card.getSuit();
-					String pathToIcon = "../img/pukeImage/"+suit+"_"+rank+".png";
+					String pathToIcon = "img/pukeImage/"+suit+"_"+rank+".png";
 					cardImage = new ImageIcon(pathToIcon).getImage();
 					g.drawImage(cardImage, selected[i]?0:HORIZONTAL_DIST_OF_CARDS, DIST_FOR_AVATRO_X+i*EACH_CARD_EDGE, this);
 				}
 			}
 			else
 			{
-				Image cardBackImage = new ImageIcon("../img/pukeImage/back.png").getImage();
+				Image cardBackImage = new ImageIcon("img/pukeImage/back.png").getImage();
 				for(int i=0; i<game.getPlayerList().get(this.playerIdx).getNumOfCards(); i++)
 				{
 					g.drawImage(cardBackImage,HORIZONTAL_DIST_OF_CARDS,DIST_FOR_AVATRO_X+i*EACH_CARD_EDGE,this);
 				}
 			}
-			Image avactorImage = new ImageIcon("../img/Avator/"+playerIdx+".png").getImage();
+			Image avactorImage = new ImageIcon("img/Avator/"+playerIdx+".png").getImage();
 			g.drawImage(avactorImage, 0, 0, this);
 		}
 
@@ -323,15 +332,22 @@ public class BigTwoTable implements CardGameTable
 		protected void paintComponent(Graphics g)
 		{
 			Image cardImage = null;
-			Hand currentHand = game.getHandsOnTable().get(game.getHandsOnTable().size()-1);
-			for(int i=0;i<currentHand.size();i++)
+			if(game.getHandsOnTable().size()!=0)
 			{
-				Card cardInHand = currentHand.getCard(i);
-				int rank = cardInHand.getRank();
-				int suit = cardInHand.getSuit();
-				String pathToIcon = "../img/pukeImage/"+suit+"_"+rank+".png";
-				cardImage = new ImageIcon(pathToIcon).getImage();
-				g.drawImage(cardImage, HORIZONTAL_DIST_OF_CARDS, i*EACH_CARD_EDGE, this);
+				Hand currentHand = game.getHandsOnTable().get(game.getHandsOnTable().size()-1);
+				for(int i=0;i<currentHand.size();i++)
+				{
+					Card cardInHand = currentHand.getCard(i);
+					int rank = cardInHand.getRank();
+					int suit = cardInHand.getSuit();
+					String pathToIcon = "img/pukeImage/"+suit+"_"+rank+".png";
+					cardImage = new ImageIcon(pathToIcon).getImage();
+					g.drawImage(cardImage, i*EACH_CARD_EDGE, 0, this);
+				}
+			}
+			else
+			{
+				g.drawRect(0, 0, WIDTH_OF_CARDS, HEIGHT_OF_CARDS);;
 			}
 		}
 	}
@@ -371,8 +387,10 @@ public class BigTwoTable implements CardGameTable
 			disable();
 			reset();
 			JFrame popUpMsg = new JFrame("Restarting...");
+			popUpMsg.setSize(200,200);
+			popUpMsg.setLocation(400,400);
 			JLabel restarting = new JLabel("The game is restarted");
-			popUpMsg.add(restarting);
+			popUpMsg.add(restarting, BorderLayout.CENTER);
 			popUpMsg.setVisible(true);
 			for(int t=0;t<9;t++)
 			{
@@ -380,9 +398,10 @@ public class BigTwoTable implements CardGameTable
 				{
 					Thread.sleep(500);
 				} catch (Exception E) {}
-				if(t%3==0)			restarting.setText("The game is restarted.");
-				else if(t%3==1)		restarting.setText("The game is restarted..");
-				else				restarting.setText("The game is restarted...");
+				//if(t%3==0)			restarting.setText("The game is restarted.");
+				//else if(t%3==1)		restarting.setText("The game is restarted..");
+				//else				restarting.setText("The game is restarted...");
+				//popUpMsg.repaint();
 			}
 			popUpMsg.setVisible(false);
 			frame.repaint();
