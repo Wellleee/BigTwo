@@ -76,6 +76,26 @@ public class BigTwo implements CardGame
 		return bigTwoTable.getActivePlayer();
 	}
 
+	/**
+	 * print the all the players' cards to the msgArea
+	 */
+	private void printCurrentCards()
+	{
+		for(int i=0;i<getNumOfPlayers();i++)
+		{
+			String toPrint = "";
+			toPrint += "Player "+i+": ";
+			for(int j=0;j<getPlayerList().get(i).getNumOfCards();j++)
+			{
+				Card cardToPrint = getPlayerList().get(i).getCardsInHand().getCard(j);
+				toPrint += cardToPrint.toString()+" ";
+			}
+			bigTwoTable.printMsg(toPrint);
+			toPrint = "";
+		}
+		bigTwoTable.printMsg("\n");
+	}
+
 	@Override
 	/**
 	 * A method for starting the game with a (shuffled) deck of
@@ -93,19 +113,7 @@ public class BigTwo implements CardGame
 		//Interaction begin
 		bigTwoTable.enable();
 		bigTwoTable.repaint();
-		String toPrint = "";
-		for(int i=0;i<getNumOfPlayers();i++)
-		{
-			toPrint += "Player "+i+": ";
-			for(int j=0;j<getPlayerList().get(i).getNumOfCards();j++)
-			{
-				Card cardToPrint = getPlayerList().get(i).getCardsInHand().getCard(j);
-				toPrint += cardToPrint.toString()+" ";
-			}
-			bigTwoTable.printMsg(toPrint);
-			toPrint = "";
-		}
-		bigTwoTable.printMsg("\n");
+		printCurrentCards();
 	}
 	
 	/**
@@ -224,11 +232,8 @@ public class BigTwo implements CardGame
 				handsOnTable.add(hand);
 				player.removeCards(cardInHand);
 				bigTwoTable.printMsg("{"+hand.getType()+"} ");
-				for(int i=0;i<hand.size()-1;i++)
-				{
-					bigTwoTable.printMsg("["+hand.getCard(i).toString()+"] ");
-				}
-				bigTwoTable.printMsg("["+hand.getCard(hand.size()-1).toString()+"]\n");
+				bigTwoTable.printMsg(hand.toString());
+				bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
 			}
 			else
 			{
@@ -237,9 +242,16 @@ public class BigTwo implements CardGame
 		}
 		else //pass
 		{
-			bigTwoTable.printMsg("{Pass}");
+			if(playerList.get(playerID) != handsOnTable.get(handsOnTable.size()-1).getPlayer())
+			{
+				bigTwoTable.printMsg("{Pass}");
+				bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
+			}
+			else
+			{
+				bigTwoTable.printMsg("Not a legal move");
+			}
 		}
-		bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
 		//bigTwoTable.repaint() ---- no need, already included in setActiveplayer
 		if(endOfGame())
 		{
