@@ -69,12 +69,13 @@ public class CardGameLauncher implements CardGameTable
 		{
 			Image icon = new ImageIcon("img/Avator/"+playerNum+".png").getImage();
 			g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100+DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
-			for(int i=0;i<this.number;i++)
+			for(int i=0;i<game.getPlayerList().get(playerNum).getNumOfCards();i++)
 			{
-				if(activePlayer == playerNum)
+				if(activePlayer == playerNum || disclose)
 				{
-					//TODO
-					Image cardTemp = new ImageIcon("img/pukeImage/"+playerNum+"_"+i+".png").getImage();
+					int rank = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getRank();
+					int suit = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getSuit();
+					Image cardTemp = new ImageIcon("img/pukeImage/"+suit+"_"+rank+".png").getImage();
 					g.drawImage(cardTemp, DIST_AVAT_CARD+i*DIST_BET_CARD, selected[i]?DIST_SELECTED_TOP:DIST_UNSELECTED_TOP, WIDTH_OF_CARD, HEIGHT_OF_CARD, this);	
 				}
 				else
@@ -143,6 +144,29 @@ public class CardGameLauncher implements CardGameTable
 	}
 
 	/**
+	 * For Drawing the board showing the top hand on table
+	 */
+	class HandsBoard extends JPanel
+	{
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			Image cardInHand = null;
+			int numOfHand = game.getHandsOnTable().size();
+			if(numOfHand!=0)
+			{
+				for(int i=0; i<game.getHandsOnTable().get(numOfHand-1).size(); i++)
+				{
+					int rank = game.getHandsOnTable().get(numOfHand-1).getCard(i).getRank();
+					int suit = game.getHandsOnTable().get(numOfHand-1).getCard(i).getSuit();
+					cardInHand = new ImageIcon("img/pukeImage/"+suit+"_"+rank+".png").getImage();
+					g.drawImage(cardInHand, (i+3)*DIST_BET_CARD, DIST_UNSELECTED_TOP, this);
+				}
+			}	
+		}
+	}
+
+	/**
 	 * Realize the behaviour of the play button when it is pressed
 	 */
 	class PlayButtonListener implements ActionListener
@@ -150,7 +174,8 @@ public class CardGameLauncher implements CardGameTable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			//game.makeMove(activePlayer, getSelected());
+			game.makeMove(activePlayer, getSelected());
+			resetSelected();
 			frame.repaint();	
 		}
 	}
@@ -163,7 +188,8 @@ public class CardGameLauncher implements CardGameTable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			//game.makeMove(activePlayer, null);
+			game.makeMove(activePlayer, null);
+			resetSelected();
 			frame.repaint();
 		}
 	}
@@ -193,14 +219,15 @@ public class CardGameLauncher implements CardGameTable
 		public void actionPerformed(ActionEvent e)
 		{
 			disable();
-			//clean all the players' cards and the hands on table
-			//re-distribute the cards
+			reset();
 			frame.repaint();
 			setActivePlayer(2);
 			enable();
 			frame.repaint();
 		}
 	}
+
+	private CardGame game;
 	
 	private JFrame frame;
 	private JMenuBar gameMenuBar;
@@ -213,6 +240,8 @@ public class CardGameLauncher implements CardGameTable
 	private CardBoard cardBoardThree;
 	private CardBoard cardBoardFour;
 	
+	private HandsBoard handsBoard;
+
 	private JPanel buttonPanel;
 	private JButton playButton;
 	private JButton passButton;
@@ -220,12 +249,16 @@ public class CardGameLauncher implements CardGameTable
 	private JTextArea textArea;
 
 	private int activePlayer;
+
+	private boolean disclose;
 	
 	/**
 	 * constructor for the this table GUI
 	 */
-	public CardGameLauncher(int activePlayer)
+	public CardGameLauncher(CardGame game)
 	{
+		this.game = game;
+
 		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		cardBoard = new JPanel();
@@ -253,6 +286,8 @@ public class CardGameLauncher implements CardGameTable
 		cardBoardFour = new CardBoard(13);
 		cardBoard.add(cardBoardFour);
 
+		handsBoard = new HandsBoard();
+		cardBoard.add(handsBoard);
 
 		cardBoard.setLayout(new BoxLayout(this.cardBoard, BoxLayout.Y_AXIS));
 		
@@ -266,16 +301,17 @@ public class CardGameLauncher implements CardGameTable
 		
 		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\n");
 		textArea.setFont(msgFont);
+
 		
 		frame.add(cardBoard);
 		frame.add(gameMenuBar, BorderLayout.NORTH);
 		frame.add(textArea,BorderLayout.EAST);
 		frame.add(buttonPanel,BorderLayout.SOUTH);
-		frame.setSize(1200, 900);
+		frame.setSize(1200, 1000);
 		frame.setLocation(300,100);
 		frame.setVisible(true);
 
-		this.activePlayer = activePlayer;
+		this.activePlayer = -1;
 	}
 
 	/**
@@ -382,15 +418,46 @@ public class CardGameLauncher implements CardGameTable
 	@Override
 	public void reset()
 	{
-		//TODO
+		//clean all the players' cards and the hands on table
+		//re-distribute the card
+		int playerWithD3 = -1;
+		game.getHandsOnTable().clear();
+		for(int i=0;i<4;i++)
+		{
+			game.getPlayerList().get(i).removeAllCards();
+		}
+		game.getDeck().shuffle();
+		for(int i=0;i<13;i++)
+		{
+			for(int j=0;j<4;j++)
+			{
+				Card cardToAdd = game.getDeck().getCard(j+4*i);
+				game.getPlayerList().get(j).addCard(cardToAdd);
+				if(cardToAdd.getRank()==2 && cardToAdd.getSuit()==0)
+					playerWithD3 = j;
+			}
+		}
+		for(int i=0;i<4;i++)
+		{
+			game.getPlayerList().get(i).sortCardsInHand();
+		}
+		setActivePlayer(playerWithD3);
+		//TODO: Animination
 	}
-	
+
 	/**
-	 * this is a inner tester for the table GUI
+	 * Retrive the active player
+	 * 
+	 * @return the index of the current active player
 	 */
-	static public void main(String [] args)
+	public int getActivePlayer()
 	{
-		CardGameLauncher cardGameGUI = new CardGameLauncher(1);
-		cardGameGUI.enable();
+		return this.activePlayer;
+	}
+
+
+	public void discloseAllPlayers()
+	{
+		disclose = true;
 	}
 }

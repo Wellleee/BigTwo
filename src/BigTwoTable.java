@@ -323,7 +323,7 @@ public class BigTwoTable implements CardGameTable
 		public void mouseExited(MouseEvent e){}
 	}
 	/**
-	 * The inner class for the behaviour of the borad for hands
+	 * The inner class for the behavior of the board for hands
 	 */
 	class HandsBoard extends JPanel
 	{

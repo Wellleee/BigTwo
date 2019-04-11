@@ -23,14 +23,15 @@ public class BigTwo implements CardGame
 			CardGamePlayer gamePlayer = new CardGamePlayer("Player"+i);
 			playerList.add(gamePlayer);
 		}
-		bigTwoTable = new BigTwoTable(this);
+		bigTwoTable = new CardGameLauncher(this);
 	}
 	
 	private Deck deck; //a deck of cards
 	private ArrayList<CardGamePlayer> playerList; //a list of player
 	private ArrayList<Hand> handsOnTable; //a list of hands
-	private BigTwoTable bigTwoTable; //a BigTwoConsole object for providing the user interface
-	
+	//private BigTwoTable bigTwoTable; //a BigTwoConsole object for providing the user interface
+	private CardGameLauncher bigTwoTable;
+
 	/**
 	 * A method for retrieving the deck of cards being used
 	 * 
@@ -86,33 +87,25 @@ public class BigTwo implements CardGame
 	 */
 	public void start(Deck deck)
 	{
-		for(int i=0;i<playerList.size();i++)
-		{
-			playerList.get(i).removeAllCards();
-		}
-		int currentIdx = -1; // starting player
 		this.deck = deck;
-		handsOnTable.clear();
 		//then distribute the cards
-		for(int i=0;i<13;i++)
-		{
-			for(int j=0;j<playerList.size();j++)
-			{
-				Card card = deck.removeCard(0);
-				playerList.get(j).addCard(card);
-				if(card.getRank()==2 && card.getSuit()==0)
-					currentIdx = j; //the one with Diamond 3 is the first player
-			}
-		}
-		for(int i=0;i<playerList.size();i++)
-		{
-			playerList.get(i).sortCardsInHand();
-		}
-		//TODO: starting animation
+		bigTwoTable.reset();
 		//Interaction begin
 		bigTwoTable.enable();
-		bigTwoTable.setActivePlayer(currentIdx);
 		bigTwoTable.repaint();
+		String toPrint = "";
+		for(int i=0;i<getNumOfPlayers();i++)
+		{
+			toPrint += "Player "+i+": ";
+			for(int j=0;j<getPlayerList().get(i).getNumOfCards();j++)
+			{
+				Card cardToPrint = getPlayerList().get(i).getCardsInHand().getCard(j);
+				toPrint += cardToPrint.toString()+" ";
+			}
+			bigTwoTable.printMsg(toPrint);
+			toPrint = "";
+		}
+		bigTwoTable.printMsg("\n");
 	}
 	
 	/**
@@ -124,7 +117,6 @@ public class BigTwo implements CardGame
 	{
 		BigTwo game = new BigTwo();
 		BigTwoDeck deck = new BigTwoDeck();
-		deck.shuffle();
 		game.start(deck);
 	}
 	
@@ -216,11 +208,11 @@ public class BigTwo implements CardGame
 			Hand hand = composeHand(player, cardInHand);
 			if(hand != null) //not invalid
 			{
-				if(handsOnTable.size()==0 && hand.contains(new BigTwoCard(0, 2)))//first player
+				if(handsOnTable.size()==0)//first player
 				{
-					legalMove = true;
+					legalMove = hand.contains(new BigTwoCard(0, 2))?true:false;
 				}
-				if(hand.beats(handsOnTable.get(handsOnTable.size()-1)) || 
+				else if(hand.beats(handsOnTable.get(handsOnTable.size()-1)) || 
 				   handsOnTable.get(handsOnTable.size()-1).getPlayer() == player)
 				//win or pass to the same person
 				{
