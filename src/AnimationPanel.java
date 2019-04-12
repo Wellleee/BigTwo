@@ -13,17 +13,22 @@ import javax.swing.JPanel;
  */
 public class AnimationPanel extends JPanel
 {
-	static public final int CoordinateX = 200;
-	static public final int CoordinateY = 200;
-	static public final int DistOfAnimation = 100;
+	private static final long serialVersionUID = -2141698510129977894L;
+
+	static public final int STARTING_POS_X = 120;
+	static public final int STARTING_POS_Y = 20;
+	static public final int DIST_BET_CARD_IN_HEAP = 100;
 	private int x;
 	private int y;
-	private int [] lines;
+	private int numOfCardsHeap;
 	@Override
 	public void paintComponent(Graphics g)
 	{
 		Image cardHeap = new ImageIcon("img/pukeImage/back.png").getImage();
-		g.drawImage(cardHeap, 120, 20, this);
+		for(int i=0;i<numOfCardsHeap-1;i++)
+		{
+			g.drawImage(cardHeap, STARTING_POS_X+i*DIST_BET_CARD_IN_HEAP, STARTING_POS_Y, this);
+		}
 		g.drawImage(cardHeap, x, y, this);
 	}
 
@@ -33,23 +38,23 @@ public class AnimationPanel extends JPanel
 	 * @param lines 
 	 * 				the Y coordinates of each player's first card
 	 */
-	public AnimationPanel(int [] lines)
+	public AnimationPanel()
 	{
-		this.x = CoordinateX;
-		this.y = CoordinateY-5;
-		this.lines = lines;
+		this.x = STARTING_POS_X;
+		this.y = STARTING_POS_Y+(numOfCardsHeap-1)*DIST_BET_CARD_IN_HEAP;
+		this.numOfCardsHeap = 13*4;
 	}
 	
 	/**
 	 * Distribute the top card to the given player
 	 * 
-	 * @param playerId
-	 * 				Which player to get card
+	 * @param num
+	 * 			idx of the num of cards
 	 */
-	public void moveCardTo(int playerId)
+	public void moveCardTo(int num)
 	{
-		this.x = 4*CoordinateX/5;
-		this.y = lines[playerId%4];
+		this.x += (num/2)*DIST_BET_CARD_IN_HEAP;
+		this.y = 0;
 	}
 	
 	/**
@@ -57,8 +62,9 @@ public class AnimationPanel extends JPanel
 	 */
 	public void cardBack()
 	{
-		this.x = CoordinateX;
-		this.y = CoordinateY-5;
+		this.x -= DIST_BET_CARD_IN_HEAP;
+		this.y = STARTING_POS_Y;
+		this.numOfCardsHeap --; 
 	}
 	
 }

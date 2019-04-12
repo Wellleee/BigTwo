@@ -439,12 +439,7 @@ public class CardGameLauncher implements CardGameTable
 	@Override
 	public void reset()
 	{
-		int [] positionOfCards = new int [game.getNumOfPlayers()];
-		for(int pl=0; pl<game.getNumOfPlayers(); pl++)
-		{
-			positionOfCards[pl] = (pl-1)* PLAYER_PANEL_DIST + PLAYER_PANEL_DIST/2;
-		}
-		AnimationPanel cardDistribution = new AnimationPanel(positionOfCards);
+		AnimationPanel cardDistribution = new AnimationPanel();
 
 		cardDistribution.setBackground(Color.BLUE);
 		cardBoard.remove(handsBoard);
@@ -466,7 +461,7 @@ public class CardGameLauncher implements CardGameTable
 		{
 			for(int j=0;j<4;j++)
 			{
-				cardDistribution.moveCardTo(j);
+				cardDistribution.moveCardTo(i);
 				frame.repaint();
 				try
 				{
