@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -29,6 +30,7 @@ public class CardGameLauncher implements CardGameTable
 	static final public int DIST_AVAT_CARD = 120;
 	static final public int DIST_UNSELECTED_TOP = 20;
 	static final public int DIST_SELECTED_TOP = 0;
+	static final public int PLAYER_PANEL_DIST = 200;
 
 	/*Decoration*/
 	static private Font menuFont;
@@ -437,23 +439,52 @@ public class CardGameLauncher implements CardGameTable
 	@Override
 	public void reset()
 	{
+		int [] positionOfCards = new int [game.getNumOfPlayers()];
+		for(int pl=0; pl<game.getNumOfPlayers(); pl++)
+		{
+			positionOfCards[pl] = (pl-1)* PLAYER_PANEL_DIST + PLAYER_PANEL_DIST/2;
+		}
+		AnimationPanel cardDistribution = new AnimationPanel(positionOfCards);
+
+		cardDistribution.setBackground(Color.BLUE);
+		cardBoard.remove(handsBoard);
+		cardBoard.add(cardDistribution);
+		frame.repaint();
+		
 		//clean all the players' cards and the hands on table
 		//re-distribute the card
 		int playerWithD3 = -1;
+		setActivePlayer(playerWithD3);
 		game.getHandsOnTable().clear();
 		for(int i=0;i<4;i++)
 		{
 			game.getPlayerList().get(i).removeAllCards();
 		}
+		frame.repaint();
 		game.getDeck().shuffle();
 		for(int i=0;i<13;i++)
 		{
 			for(int j=0;j<4;j++)
 			{
+				cardDistribution.moveCardTo(j);
+				frame.repaint();
+				try
+				{
+					Thread.sleep(300);
+				}catch(Exception E){}
+				
 				Card cardToAdd = game.getDeck().getCard(j+4*i);
 				game.getPlayerList().get(j).addCard(cardToAdd);
+				
 				if(cardToAdd.getRank()==2 && cardToAdd.getSuit()==0)
 					playerWithD3 = j;
+				
+				cardDistribution.cardBack();
+				frame.repaint();
+				try
+				{
+					Thread.sleep(300);
+				}catch(Exception E){}
 			}
 		}
 		for(int i=0;i<4;i++)
@@ -461,7 +492,8 @@ public class CardGameLauncher implements CardGameTable
 			game.getPlayerList().get(i).sortCardsInHand();
 		}
 		setActivePlayer(playerWithD3);
-		//TODO: Animination
+		cardBoard.remove(cardDistribution);
+		cardBoard.add(handsBoard);
 	}
 
 	/**
