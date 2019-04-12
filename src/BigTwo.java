@@ -87,8 +87,15 @@ public class BigTwo implements CardGame
 			toPrint += "Player "+i+": ";
 			for(int j=0;j<getPlayerList().get(i).getNumOfCards();j++)
 			{
-				Card cardToPrint = getPlayerList().get(i).getCardsInHand().getCard(j);
-				toPrint += cardToPrint.toString()+" ";
+				if(bigTwoTable.getActivePlayer()==i)
+				{
+					Card cardToPrint = getPlayerList().get(i).getCardsInHand().getCard(j);
+					toPrint += cardToPrint.toString()+" ";
+				}
+				else
+				{
+					toPrint += "[*]*";
+				}
 			}
 			bigTwoTable.printMsg(toPrint);
 			toPrint = "";
@@ -234,6 +241,7 @@ public class BigTwo implements CardGame
 				bigTwoTable.printMsg("{"+hand.getType()+"} ");
 				bigTwoTable.printMsg(hand.toString());
 				bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
+				this.printCurrentCards();
 			}
 			else
 			{
@@ -242,7 +250,7 @@ public class BigTwo implements CardGame
 		}
 		else //pass
 		{
-			if(playerList.get(playerID) != handsOnTable.get(handsOnTable.size()-1).getPlayer())
+			if(handsOnTable.size()==0 || playerList.get(playerID) != handsOnTable.get(handsOnTable.size()-1).getPlayer())
 			{
 				bigTwoTable.printMsg("{Pass}");
 				bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
@@ -260,7 +268,7 @@ public class BigTwo implements CardGame
 			{
 				bigTwoTable.printMsg("Player "+i+" ");
 				if(playerList.get(i).getCardsInHand().isEmpty())
-					bigTwoTable.printMsg("wins the game.\n");
+					bigTwoTable.printMsg("wins the game. ");
 				else
 					bigTwoTable.printMsg("has "+playerList.get(i).getCardsInHand().size()+" cards in hand.\n");
 			}//END: final print

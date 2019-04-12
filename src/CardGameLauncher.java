@@ -25,7 +25,7 @@ public class CardGameLauncher implements CardGameTable
 {
 	static final public int WIDTH_OF_CARD = 105;
 	static final public int HEIGHT_OF_CARD = 150;
-	static final public int DIST_BET_CARD = 30;
+	static final public int DIST_BET_CARD = 21;
 	static final public int DIST_AVAT_CARD = 120;
 	static final public int DIST_UNSELECTED_TOP = 20;
 	static final public int DIST_SELECTED_TOP = 0;
@@ -47,6 +47,7 @@ public class CardGameLauncher implements CardGameTable
 	 */
 	class CardBoard extends JPanel implements MouseListener
 	{
+		private static final long serialVersionUID = 1L;
 		int playerNum;
 		private boolean selected[];
 		private int number = 0;
@@ -92,6 +93,7 @@ public class CardGameLauncher implements CardGameTable
 			if(activePlayer != playerNum)	return;
 			int mouseX = e.getX()-DIST_AVAT_CARD;
 			int mouseY = e.getY()-DIST_SELECTED_TOP;
+			int number = game.getPlayerList().get(playerNum).getNumOfCards();
 			if(mouseX <0 || mouseY<0 || mouseX>DIST_BET_CARD*(number-1)+WIDTH_OF_CARD || mouseY>DIST_UNSELECTED_TOP+HEIGHT_OF_CARD)
 				return;
 			//horizontally, number+2 areas
@@ -167,21 +169,29 @@ public class CardGameLauncher implements CardGameTable
 	}
 
 	/**
-	 * Realize the behaviour of the play button when it is pressed
+	 * Realize the behavior of the play button when it is pressed
 	 */
 	class PlayButtonListener implements ActionListener
 	{
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			game.makeMove(activePlayer, getSelected());
-			resetSelected();
-			frame.repaint();	
+			int [] selectedCards = getSelected();
+			if(selectedCards == null || selectedCards.length == 0)
+			{
+				printMsg("You have to choose at least a card, or pass");
+			}
+			else
+			{
+				game.makeMove(activePlayer, selectedCards);
+				resetSelected();
+				frame.repaint();	
+			}
 		}
 	}
 
 	/**
-	 * Realize the behaviour of the pass button when it is pressed
+	 * Realize the behavior of the pass button when it is pressed
 	 */
 	class PassButtonListener implements ActionListener
 	{
@@ -251,6 +261,8 @@ public class CardGameLauncher implements CardGameTable
 	private int activePlayer;
 
 	private boolean disclose;
+	
+	private int numOfPrints = 0;
 	
 	/**
 	 * constructor for the this table GUI
@@ -406,7 +418,14 @@ public class CardGameLauncher implements CardGameTable
 	@Override
 	public void printMsg(String msg)
 	{
+		if(numOfPrints >= 20) 
+		{
+			clearMsgArea();
+			this.textArea.append("New Game: BigTwo\t\t\t\t\n");
+			numOfPrints = 0;
+		}
 		this.textArea.append(msg+"\n");
+		numOfPrints ++;
 	}
 
 	@Override
@@ -446,7 +465,7 @@ public class CardGameLauncher implements CardGameTable
 	}
 
 	/**
-	 * Retrive the active player
+	 * Retrieve the active player
 	 * 
 	 * @return the index of the current active player
 	 */
