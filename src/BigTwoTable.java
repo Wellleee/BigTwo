@@ -21,17 +21,38 @@ import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 
 public class BigTwoTable implements CardGameTable {
+	/**
+	 * the width of card image
+	 */
 	static final public int WIDTH_OF_CARD = 105;
+	/**
+	 * the height of the card
+	 */
 	static final public int HEIGHT_OF_CARD = 150;
+	/**
+	 * the horizontal distance between each two cards
+	 */
 	static final public int DIST_BET_CARD = 21;
+	/**
+	 * the distance between leftmost card to the left edge of the avator image
+	 */
 	static final public int DIST_AVAT_CARD = 120;
+	/**
+	 * the horizontal distance of an unselected card
+	 */
 	static final public int DIST_UNSELECTED_TOP = 20;
+		/**
+	 * the horizontal distance of a selected card
+	 */
 	static final public int DIST_SELECTED_TOP = 0;
+	/**
+	 * the height of each player panel
+	 */
 	static final public int PLAYER_PANEL_DIST = 200;
 
 	/* Decoration */
 	static private Font menuFont;
-	static private Font buttonFont;
+	static private Font buttonFont; 
 	static private Font msgFont;
 	static private int totalPlayerNum;
 	{
@@ -46,6 +67,9 @@ public class BigTwoTable implements CardGameTable {
 	 */
 	class CardBoard extends JPanel implements MouseListener {
 		private static final long serialVersionUID = 1L;
+		/**
+		 * the index of the player of this cardborad
+		 */
 		int playerNum;
 		private boolean selected[];
 		private int number = 0;
@@ -355,6 +379,9 @@ public class BigTwoTable implements CardGameTable {
 		//quitMenuItem.removeActionListener(quitMenuItem.getActionListeners()[0]);
 	}
 
+	/**
+	 * set all the cards to be unselected
+	 */
 	public void resetSelected()
 	{
 		cardBoardOne.selected = new boolean [cardBoardOne.number];
@@ -507,7 +534,9 @@ public class BigTwoTable implements CardGameTable {
 		return this.activePlayer;
 	}
 
-
+	/**
+	 * show all the cards remained in all players
+	 */
 	public void discloseAllPlayers()
 	{
 		disclose = true;

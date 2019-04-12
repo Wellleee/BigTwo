@@ -15,8 +15,17 @@ public class AnimationPanel extends JPanel
 {
 	private static final long serialVersionUID = -2141698510129977894L;
 
+	/**
+	 * the x coordiante of the base card in heap
+	 */
 	static public final int STARTING_POS_X = 120;
+	/**
+	 * the y coordiante of the base card in heap
+	 */
 	static public final int STARTING_POS_Y = 20;
+	/**
+	 * the distance between every two cards in heap
+	 */
 	static public final int DIST_BET_CARD_IN_HEAP = 5;
 	private int x;
 	private int y;
