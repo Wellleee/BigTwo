@@ -23,14 +23,14 @@ public class BigTwo implements CardGame
 			CardGamePlayer gamePlayer = new CardGamePlayer("Player"+i);
 			playerList.add(gamePlayer);
 		}
-		bigTwoTable = new CardGameLauncher(this);
+		bigTwoTable = new BigTwoTable(this);
 	}
 	
 	private Deck deck; //a deck of cards
 	private ArrayList<CardGamePlayer> playerList; //a list of player
 	private ArrayList<Hand> handsOnTable; //a list of hands
-	//private BigTwoTable bigTwoTable; //a BigTwoConsole object for providing the user interface
-	private CardGameLauncher bigTwoTable;
+	private BigTwoTable bigTwoTable; //a BigTwoConsole object for providing the user interface
+	//private CardGameLauncher bigTwoTable;
 
 	/**
 	 * A method for retrieving the deck of cards being used

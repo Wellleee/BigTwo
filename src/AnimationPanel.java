@@ -17,7 +17,7 @@ public class AnimationPanel extends JPanel
 
 	static public final int STARTING_POS_X = 120;
 	static public final int STARTING_POS_Y = 20;
-	static public final int DIST_BET_CARD_IN_HEAP = 100;
+	static public final int DIST_BET_CARD_IN_HEAP = 5;
 	private int x;
 	private int y;
 	private int numOfCardsHeap;
@@ -40,21 +40,29 @@ public class AnimationPanel extends JPanel
 	 */
 	public AnimationPanel()
 	{
-		this.x = STARTING_POS_X;
-		this.y = STARTING_POS_Y+(numOfCardsHeap-1)*DIST_BET_CARD_IN_HEAP;
 		this.numOfCardsHeap = 13*4;
+		this.x = STARTING_POS_X+(numOfCardsHeap-1)*DIST_BET_CARD_IN_HEAP;
+		this.y = STARTING_POS_Y;
+	}
+	
+	/**
+	 * Rise the top card on the heap
+	 */
+	public void riseCard()
+	{
+		this.y = 0;
 	}
 	
 	/**
 	 * Distribute the top card to the given player
 	 * 
 	 * @param num
-	 * 			idx of the num of cards
+	 * 			index of the cards
 	 */
 	public void moveCardTo(int num)
 	{
-		this.x += (num/2)*DIST_BET_CARD_IN_HEAP;
-		this.y = 0;
+		this.x = STARTING_POS_X+(num)*21;
+		this.y = -STARTING_POS_Y*3;
 	}
 	
 	/**
@@ -62,7 +70,7 @@ public class AnimationPanel extends JPanel
 	 */
 	public void cardBack()
 	{
-		this.x -= DIST_BET_CARD_IN_HEAP;
+		this.x = STARTING_POS_X+(numOfCardsHeap-1)*DIST_BET_CARD_IN_HEAP;
 		this.y = STARTING_POS_Y;
 		this.numOfCardsHeap --; 
 	}

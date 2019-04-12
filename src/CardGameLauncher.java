@@ -14,6 +14,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -231,11 +232,15 @@ public class CardGameLauncher implements CardGameTable
 		public void actionPerformed(ActionEvent e)
 		{
 			disable();
-			reset();
-			frame.repaint();
-			setActivePlayer(2);
-			enable();
-			frame.repaint();
+			clearMsgArea();
+			
+			JFrame confirmation = new JFrame("Restarting");
+			confirmation.setSize(200,50);
+			confirmation.setLocation(700,500);
+			confirmation.setVisible(true);
+			
+			game.start(game.getDeck());
+			confirmation.setVisible(false);
 		}
 	}
 
@@ -313,7 +318,7 @@ public class CardGameLauncher implements CardGameTable
 		buttonPanel.add(playButton);
 		buttonPanel.add(passButton);
 		
-		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\n");
+		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\t\t\n");
 		textArea.setFont(msgFont);
 
 		
@@ -363,8 +368,8 @@ public class CardGameLauncher implements CardGameTable
 		cardBoardTwo.removeMouseListener(cardBoardTwo);
 		cardBoardThree.removeMouseListener(cardBoardThree);
 		cardBoardFour.removeMouseListener(cardBoardFour);
-		restartMenuItem.removeActionListener(restartMenuItem.getActionListeners()[0]);
-		quitMenuItem.removeActionListener(quitMenuItem.getActionListeners()[0]);
+		//restartMenuItem.removeActionListener(restartMenuItem.getActionListeners()[0]);
+		//quitMenuItem.removeActionListener(quitMenuItem.getActionListeners()[0]);
 	}
 
 	public void resetSelected()
@@ -439,14 +444,25 @@ public class CardGameLauncher implements CardGameTable
 	@Override
 	public void reset()
 	{
+		//clean all the players' cards and the hands on table
+		for(CardGamePlayer ply : game.getPlayerList())
+		{
+			ply.removeAllCards();
+		}
+		game.getHandsOnTable().clear();
+		frame.repaint();
+		try
+		{
+			Thread.sleep(50);
+		}catch(Exception E) {}
+		
+		//invoke the animation
 		AnimationPanel cardDistribution = new AnimationPanel();
 
 		cardDistribution.setBackground(Color.BLUE);
 		cardBoard.remove(handsBoard);
 		cardBoard.add(cardDistribution);
 		frame.repaint();
-		
-		//clean all the players' cards and the hands on table
 		//re-distribute the card
 		int playerWithD3 = -1;
 		setActivePlayer(playerWithD3);
@@ -461,12 +477,18 @@ public class CardGameLauncher implements CardGameTable
 		{
 			for(int j=0;j<4;j++)
 			{
-				cardDistribution.moveCardTo(i);
+				cardDistribution.riseCard();
 				frame.repaint();
 				try
 				{
-					Thread.sleep(300);
+					Thread.sleep(100);
 				}catch(Exception E){}
+				//cardDistribution.moveCardTo(i);
+				//frame.repaint();
+				//try
+				//{
+				//	Thread.sleep(100);
+				//}catch(Exception E){}
 				
 				Card cardToAdd = game.getDeck().getCard(j+4*i);
 				game.getPlayerList().get(j).addCard(cardToAdd);
@@ -478,7 +500,7 @@ public class CardGameLauncher implements CardGameTable
 				frame.repaint();
 				try
 				{
-					Thread.sleep(300);
+					Thread.sleep(100);
 				}catch(Exception E){}
 			}
 		}

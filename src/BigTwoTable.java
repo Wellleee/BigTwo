@@ -1,5 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -19,352 +21,180 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
-/**
- * This class is used to create the GUI for the BigTwo Card game.
- * 
- * @author davidliu
- *
- */
+
+
 public class BigTwoTable implements CardGameTable
 {
-	private final static int MAX_CARD_NUM = 13; // maximum num of cards
-	private final static int HORIZONTAL_DIST_OF_CARDS = 10; //x in the playerboard
-	private final static int EACH_CARD_EDGE = 10;
-	private final static int DIST_FOR_AVATRO_X = 40;
-	private final static int WIDTH_OF_CARDS = 105; //unit: pixel
-	private final static int HEIGHT_OF_CARDS = 150; //unit: pixel
+	static final public int WIDTH_OF_CARD = 105;
+	static final public int HEIGHT_OF_CARD = 150;
+	static final public int DIST_BET_CARD = 21;
+	static final public int DIST_AVAT_CARD = 120;
+	static final public int DIST_UNSELECTED_TOP = 20;
+	static final public int DIST_SELECTED_TOP = 0;
+	static final public int PLAYER_PANEL_DIST = 200;
 
-	//The GUI Table is created. 
-	public BigTwoTable(CardGame cardGame)
+	/*Decoration*/
+	static private Font menuFont;
+	static private Font buttonFont;
+	static private Font msgFont;
+	static private int totalPlayerNum;
 	{
-		this.game = cardGame;
+		menuFont = new Font(null, Font.BOLD, 17);
+		buttonFont = new Font(null, Font.BOLD, 22);
+		msgFont = new Font(null, Font.ITALIC, 17);
+		totalPlayerNum = 0;
+	}
+	
+	/**
+	 * The inner class for each player's panel
+	 */
+	class CardBoard extends JPanel implements MouseListener
+	{
+		private static final long serialVersionUID = 1L;
+		int playerNum;
+		private boolean selected[];
+		private int number = 0;
+
+		/**
+		 * The constructor of the cardboard
+		 * 
+		 * @param number how many cards are the player initialized to be
+		 */
+		CardBoard(int number)
+		{
+			selected = new boolean [number];
+			this.number = number;
+			playerNum = totalPlayerNum;
+			totalPlayerNum++;
+		}
 		
-		/*Main GUI frame*/
-		frame = new JFrame("Big Two");
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			Image icon = new ImageIcon("img/Avator/"+playerNum+".png").getImage();
+			g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100+DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
+			for(int i=0;i<game.getPlayerList().get(playerNum).getNumOfCards();i++)
+			{
+				if(activePlayer == playerNum || disclose)
+				{
+					int rank = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getRank();
+					int suit = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getSuit();
+					Image cardTemp = new ImageIcon("img/pukeImage/"+suit+"_"+rank+".png").getImage();
+					g.drawImage(cardTemp, DIST_AVAT_CARD+i*DIST_BET_CARD, selected[i]?DIST_SELECTED_TOP:DIST_UNSELECTED_TOP, WIDTH_OF_CARD, HEIGHT_OF_CARD, this);	
+				}
+				else
+				{
+					Image cardTemp = new ImageIcon("img/pukeImage/back.png").getImage();
+					g.drawImage(cardTemp, DIST_AVAT_CARD+i*DIST_BET_CARD, DIST_UNSELECTED_TOP, WIDTH_OF_CARD, HEIGHT_OF_CARD, this);
+				}
+			}
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) 
+		{
+			if(activePlayer != playerNum)	return;
+			int mouseX = e.getX()-DIST_AVAT_CARD;
+			int mouseY = e.getY()-DIST_SELECTED_TOP;
+			int number = game.getPlayerList().get(playerNum).getNumOfCards();
+			if(mouseX <0 || mouseY<0 || mouseX>DIST_BET_CARD*(number-1)+WIDTH_OF_CARD || mouseY>DIST_UNSELECTED_TOP+HEIGHT_OF_CARD)
+				return;
+			//horizontally, number+2 areas
+			//vertically, 3 areas;
+			int areaX = (int)mouseX/DIST_BET_CARD; //i.e. one third of width
+			int areaY = mouseY<DIST_UNSELECTED_TOP?0:(mouseY<HEIGHT_OF_CARD?1:2);
+			switch (areaY) {
+				case 0:
+					for(int i = areaX;i>areaX-5 && i>=0;i--)
+					{
+						if(selected[i>= number?number-1:i])
+						{
+							selected[i>= number?number-1:i] = false;
+							break;
+						}
+					}
+					break;
+				case 1:
+					int cardIdx = areaX >= number?number-1:areaX;
+					selected[cardIdx] = selected[cardIdx]?false:true;
+					break;
+				case 2:
+					for(int i = areaX;i>areaX-5 && i>=0;i--)
+					{
+						if(!selected[i>= number?number-1:i])
+						{
+							selected[i>= number?number-1:i] = true;
+							break;
+						}
+					}
+					break;
+				default:
+					break;
+			}
+			frame.repaint();
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {}
+
+		@Override
+		public void mouseExited(MouseEvent e) {}
 		
-		/*menu bar*/
-		menuBar = new JMenuBar();
-		gamMenu = new JMenu("Game");
-		menuBar.add(gamMenu);
-		restarItem = new JMenuItem("Restart");
-		quitItem = new JMenuItem("Quit");
-		restarItem.addActionListener(new RestartMenuItemListener());
-		quitItem.addActionListener(new QuitMenuItemListener());
-		gamMenu.add(restarItem);
-		gamMenu.add(quitItem);
-
-		/*left panel*/
-		playingPanel = new JPanel();
-		playBoards = new PlayerBoard [game.getNumOfPlayers()];
-		clickable = false;
-		disclosing = false;
-		for(int i=0; i<game.getNumOfPlayers(); i++)
-		{
-			playBoards[i] = new PlayerBoard(i); //to be drawn
-			playBoards[i].setBackground(Color.GREEN);
-			playingPanel.add(playingPanel.add(playBoards[i]));
-		}
-		handsBoard = new HandsBoard(); //to be drawn
-		handsBoard.setForeground(Color.GREEN);
-		playingPanel.add(handsBoard);
-		buttonBoard = new JPanel(); //Flow layout
-		playButton = new JButton("Play");
-		passButton = new JButton("Pass");
-		buttonBoard.add(playButton);
-		buttonBoard.add(passButton);
-		playingPanel.add(buttonBoard);
-		playingPanel.setLayout(new BoxLayout(playingPanel, BoxLayout.Y_AXIS));
-		/*Right message area*/
-		msgArea = new JTextArea("New Game");
-		//add all of the above components to the frame;
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.add(menuBar, BorderLayout.NORTH);
-		frame.add(msgArea, BorderLayout.EAST);
-		frame.add(playingPanel,BorderLayout.CENTER);
-
-		frame.setSize(800, 400);
-		frame.setVisible(true);
-	}
-
-	private CardGame game; // the bigtwo game
-	private boolean[] selected; // which cards are selected by the PREVIOUS player
-	private int activePlayer; //idx of currently active player
-
-	private JFrame frame; // main window
-
-	private JMenuBar menuBar; //menu bar
-	private JMenu gamMenu; //game menu
-	private JMenuItem restarItem; // restart under the game menu
-	private JMenuItem quitItem; // quit the game
-
-	private JTextArea msgArea; //space for output the game info
-
-	private JPanel playingPanel; //panel for cards, hands and buttons
-	private boolean clickable;
-	private boolean disclosing;//disclosing all the players' card
-	private PlayerBoard [] playBoards; //all the four players
-	private HandsBoard handsBoard; //showing the top of hands on table
-	private JPanel buttonBoard; //showing the Play and the Pass button
-
-	private JButton playButton;
-	private JButton passButton; //buttons in the button board
-
-	/**
-	 * Retirve the index of the currently active player
-	 * 
-	 * @return the activePlayer
-	 */
-	public int getActivePlayer()
-	{
-		return activePlayer;
-	}
-
-	@Override
-	public void setActivePlayer(int activePlayer)
-	{
-		if (activePlayer < 0 || activePlayer >= game.getNumOfPlayers())
-		{
-			this.activePlayer = -1;
-			selected = null;
-		}
-		else
-		{
-			this.activePlayer = activePlayer;
-			selected = new boolean [game.getPlayerList().get(activePlayer).getNumOfCards()];
-		}
-		frame.repaint();
 	}
 
 	/**
-	 * showing all the players' card
-	 */
-	public void discloseAllPlayers()
-	{
-		this.disclosing = true;
-	}
-
-	@Override
-	public int[] getSelected()
-	{
-		//the returned array is generated from the results of the play button. 
-		ArrayList<Integer> selectedCardList = new ArrayList<Integer>();
-		for(int i=0;i<this.selected.length;i++)
-		{
-			if(selected[i])
-				selectedCardList.add(i);
-		}
-		int [] selectedCards = new int [selectedCardList.size()];
-		for(int cardIdx:selectedCardList)
-		{
-			selectedCards[selectedCardList.indexOf(cardIdx)] = cardIdx;
-		}
-		return selectedCards;
-	}
-
-	@Override
-	public void resetSelected()
-	{
-		//not changing activelayer, thus no need to re-declare an array
-		for(int i=0; i<selected.length; i++)
-		{
-			selected[i] = false;
-		}
-	}
-
-	@Override
-	public void repaint()
-	{
-		// implementation of GUI.go()
-		this.buttonBoard.repaint();
-		this.handsBoard.repaint();
-		for(int i=0;i<playBoards.length;i++)
-		{
-			playBoards[i].repaint();
-		}
-		this.playingPanel.repaint();
-	}
-
-	@Override
-	public void printMsg(String msg)
-	{
-		this.msgArea.append(msg);
-	}
-
-	@Override
-	public void clearMsgArea()
-	{
-		msgArea.setText(null);
-	}
-
-	@Override
-	public void reset()
-	{
-		//first remove all the hands on table
-		game.getHandsOnTable().clear();
-		//then remove all the cards from the players
-		for(int i=0; i<game.getNumOfPlayers();i++)
-			game.getPlayerList().get(i).removeAllCards();
-		//then reset the cards
-		game.getDeck().initialize();
-		game.getDeck().shuffle();
-		for(int i=0;i<MAX_CARD_NUM;i++)
-		{
-			for(int j=0;j<game.getPlayerList().size();j++)
-			{
-				Card card = game.getDeck().removeCard(0);
-				game.getPlayerList().get(j).addCard(card);
-				if(card.getRank()==2 && card.getSuit()==0)
-					activePlayer = j; //the one with Diamond 3 is the first player
-			}
-		}
-		//TODO: animation of distributing cards
-		for(int i=0;i<game.getPlayerList().size();i++)
-		{
-			game.getPlayerList().get(i).sortCardsInHand();
-		}
-	}
-
-	@Override
-	public void enable()
-	{
-		this.clickable = true;
-		passButton.addActionListener(new PassButtonListener());
-		playButton.addActionListener(new PlayButtonListener());
-	}
-
-	@Override
-	public void disable()
-	{
-		this.clickable = false;
-		passButton.removeActionListener(passButton.getActionListeners()[0]);
-		playButton.removeActionListener(playButton.getActionListeners()[0]);
-	}
-	/**
-	 * The inner class for the behaviour of the cardPanel
-	 */
-	class PlayerBoard extends JPanel implements MouseListener
-	{
-		private static final long serialVersionUID = -1414283557475818226L;
-		private int playerIdx;
-		PlayerBoard(int playerIdx)
-		{
-			this.playerIdx = playerIdx;
-		}
-
-		@Override
-		public void mouseClicked(MouseEvent e)
-		{
-			if(clickable)
-			{
-				int idxOfCard = -1;
-				int xMouse = e.getX()-DIST_FOR_AVATRO_X; //x-dist relative to the left-most edge of cards
-				int yMouse = e.getY();
-				if(xMouse < EACH_CARD_EDGE*(selected.length-1) && xMouse>=0)
-				{
-					idxOfCard = (int)xMouse/EACH_CARD_EDGE;
-				}
-				else if(xMouse < EACH_CARD_EDGE*(selected.length-1)+WIDTH_OF_CARDS)
-				{
-					idxOfCard = selected.length-1;
-				}
-				if(idxOfCard < 0 || idxOfCard >= selected.length)	return;
-				//then check for the y-coordinate
-				if(selected[idxOfCard])//being selected
-				{
-					if(yMouse>0 && yMouse<HEIGHT_OF_CARDS)	selected[idxOfCard]=false;
-				}
-				else//not being selected
-				{
-					if(yMouse>HORIZONTAL_DIST_OF_CARDS && yMouse<HORIZONTAL_DIST_OF_CARDS+HEIGHT_OF_CARDS)
-						selected[idxOfCard] = true;
-				}
-				frame.repaint();
-			}
-		}
-
-		@Override
-		protected void paintComponent(Graphics g)
-		{
-			if(this.playerIdx==activePlayer || disclosing)
-			{
-				Image cardImage = null;
-				for(int i=0; i<game.getPlayerList().get(this.playerIdx).getNumOfCards(); i++)
-				{
-					Card card = game.getPlayerList().get(this.playerIdx).getCardsInHand().getCard(i);
-					int rank = card.getRank();
-					int suit = card.getSuit();
-					String pathToIcon = "img/pukeImage/"+suit+"_"+rank+".png";
-					cardImage = new ImageIcon(pathToIcon).getImage();
-					g.drawImage(cardImage, selected[i]?0:HORIZONTAL_DIST_OF_CARDS, DIST_FOR_AVATRO_X+i*EACH_CARD_EDGE, this);
-				}
-			}
-			else
-			{
-				Image cardBackImage = new ImageIcon("img/pukeImage/back.png").getImage();
-				for(int i=0; i<game.getPlayerList().get(this.playerIdx).getNumOfCards(); i++)
-				{
-					g.drawImage(cardBackImage,HORIZONTAL_DIST_OF_CARDS,DIST_FOR_AVATRO_X+i*EACH_CARD_EDGE,this);
-				}
-			}
-			Image avactorImage = new ImageIcon("img/Avator/"+playerIdx+".png").getImage();
-			g.drawImage(avactorImage, 0, 0, this);
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e){}
-
-		@Override
-		public void mouseReleased(MouseEvent e){}
-
-		@Override
-		public void mouseEntered(MouseEvent e){}
-
-		@Override
-		public void mouseExited(MouseEvent e){}
-	}
-	/**
-	 * The inner class for the behavior of the board for hands
+	 * For Drawing the board showing the top hand on table
 	 */
 	class HandsBoard extends JPanel
 	{
-		private static final long serialVersionUID = -8603899012460768388L;
 		@Override
-		protected void paintComponent(Graphics g)
+		public void paintComponent(Graphics g)
 		{
-			Image cardImage = null;
-			if(game.getHandsOnTable().size()!=0)
+			Image cardInHand = null;
+			int numOfHand = game.getHandsOnTable().size();
+			if(numOfHand!=0)
 			{
-				Hand currentHand = game.getHandsOnTable().get(game.getHandsOnTable().size()-1);
-				for(int i=0;i<currentHand.size();i++)
+				for(int i=0; i<game.getHandsOnTable().get(numOfHand-1).size(); i++)
 				{
-					Card cardInHand = currentHand.getCard(i);
-					int rank = cardInHand.getRank();
-					int suit = cardInHand.getSuit();
-					String pathToIcon = "img/pukeImage/"+suit+"_"+rank+".png";
-					cardImage = new ImageIcon(pathToIcon).getImage();
-					g.drawImage(cardImage, i*EACH_CARD_EDGE, 0, this);
+					int rank = game.getHandsOnTable().get(numOfHand-1).getCard(i).getRank();
+					int suit = game.getHandsOnTable().get(numOfHand-1).getCard(i).getSuit();
+					cardInHand = new ImageIcon("img/pukeImage/"+suit+"_"+rank+".png").getImage();
+					g.drawImage(cardInHand, (i+3)*DIST_BET_CARD, DIST_UNSELECTED_TOP, this);
 				}
-			}
-			else
-			{
-				g.drawRect(0, 0, WIDTH_OF_CARDS, HEIGHT_OF_CARDS);;
-			}
+			}	
 		}
 	}
+
 	/**
-	 * Realize the behaviour of the play button when it is pressed
+	 * Realize the behavior of the play button when it is pressed
 	 */
 	class PlayButtonListener implements ActionListener
 	{
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			game.makeMove(activePlayer, getSelected());
-			frame.repaint();
+			int [] selectedCards = getSelected();
+			if(selectedCards == null || selectedCards.length == 0)
+			{
+				printMsg("You have to choose at least a card, or pass");
+			}
+			else
+			{
+				game.makeMove(activePlayer, selectedCards);
+				resetSelected();
+				frame.repaint();	
+			}
 		}
 	}
+
 	/**
-	 * Realize the behaviour of the pass button when it is pressed
+	 * Realize the behavior of the pass button when it is pressed
 	 */
 	class PassButtonListener implements ActionListener
 	{
@@ -372,42 +202,11 @@ public class BigTwoTable implements CardGameTable
 		public void actionPerformed(ActionEvent e)
 		{
 			game.makeMove(activePlayer, null);
+			resetSelected();
 			frame.repaint();
 		}
 	}
-	/**
-	 * Restart the game. The restart menu item is inside the Game menu which is located in the
-	 * menu bar at the top of the frame. 
-	 */
-	class RestartMenuItemListener implements ActionListener
-	{
-		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			disable();
-			reset();
-			JFrame popUpMsg = new JFrame("Restarting...");
-			popUpMsg.setSize(200,200);
-			popUpMsg.setLocation(400,400);
-			JLabel restarting = new JLabel("The game is restarted");
-			popUpMsg.add(restarting, BorderLayout.CENTER);
-			popUpMsg.setVisible(true);
-			for(int t=0;t<9;t++)
-			{
-				try
-				{
-					Thread.sleep(500);
-				} catch (Exception E) {}
-				//if(t%3==0)			restarting.setText("The game is restarted.");
-				//else if(t%3==1)		restarting.setText("The game is restarted..");
-				//else				restarting.setText("The game is restarted...");
-				//popUpMsg.repaint();
-			}
-			popUpMsg.setVisible(false);
-			frame.repaint();
-			enable();
-		}
-	}
+	
 	/**
 	 * Quit the game. The quit menu item is located in the Game menu which is located in the
 	 * menu bar at the top of the frame. 
@@ -421,5 +220,312 @@ public class BigTwoTable implements CardGameTable
 			frame.setVisible(false);
 			System.exit(0);
 		}
+	}
+
+	/**
+	 * Restart the game. The restart menu item is inside the Game menu which is located in the
+	 * menu bar at the top of the frame. 
+	 */
+	class RestartMenuItemListener implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			disable();
+			clearMsgArea();
+			
+			JFrame confirmation = new JFrame("Restarting");
+			confirmation.setSize(200,50);
+			confirmation.setLocation(700,500);
+			confirmation.setVisible(true);
+			
+			game.start(game.getDeck());
+			confirmation.setVisible(false);
+		}
+	}
+
+	private CardGame game;
+	
+	private JFrame frame;
+	private JMenuBar gameMenuBar;
+	private JMenu gameMenu;
+	private JMenuItem restartMenuItem;
+	private JMenuItem quitMenuItem;
+	private JPanel cardBoard;
+	private CardBoard cardBoardOne;
+	private CardBoard cardBoardTwo;
+	private CardBoard cardBoardThree;
+	private CardBoard cardBoardFour;
+	
+	private HandsBoard handsBoard;
+
+	private JPanel buttonPanel;
+	private JButton playButton;
+	private JButton passButton;
+	
+	private JTextArea textArea;
+
+	private int activePlayer;
+
+	private boolean disclose;
+	
+	private int numOfPrints = 0;
+	
+	/**
+	 * constructor for the this table GUI
+	 */
+	public BigTwoTable(CardGame game)
+	{
+		this.game = game;
+
+		frame = new JFrame();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		cardBoard = new JPanel();
+		gameMenuBar = new JMenuBar();
+		gameMenu = new JMenu("Game");
+		gameMenu.setFont(menuFont);
+		restartMenuItem = new JMenuItem("Restart");
+		quitMenuItem = new JMenuItem("Quit");
+
+		gameMenu.add(restartMenuItem);
+		gameMenu.add(quitMenuItem);
+		gameMenuBar.add(gameMenu);
+
+		cardBoard.setBackground(Color.DARK_GRAY);
+		
+		cardBoardOne = new CardBoard(13);
+		cardBoard.add(cardBoardOne);
+
+		cardBoardTwo = new CardBoard(13);
+		cardBoard.add(cardBoardTwo);
+
+		cardBoardThree = new CardBoard(13);
+		cardBoard.add(cardBoardThree);
+
+		cardBoardFour = new CardBoard(13);
+		cardBoard.add(cardBoardFour);
+
+		handsBoard = new HandsBoard();
+		cardBoard.add(handsBoard);
+
+		cardBoard.setLayout(new BoxLayout(this.cardBoard, BoxLayout.Y_AXIS));
+		
+		buttonPanel = new JPanel();
+		playButton = new JButton("Play");
+		playButton.setFont(buttonFont);
+		passButton = new JButton("Pass");
+		passButton.setFont(buttonFont);
+		buttonPanel.add(playButton);
+		buttonPanel.add(passButton);
+		
+		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\t\t\n");
+		textArea.setFont(msgFont);
+
+		
+		frame.add(cardBoard);
+		frame.add(gameMenuBar, BorderLayout.NORTH);
+		frame.add(textArea,BorderLayout.EAST);
+		frame.add(buttonPanel,BorderLayout.SOUTH);
+		frame.setSize(1200, 1000);
+		frame.setLocation(300,100);
+		frame.setVisible(true);
+
+		this.activePlayer = -1;
+	}
+
+	/**
+	 * set the activeplayer
+	 * 
+	 * @param activePlayer index of the activeplayer
+	 */
+	public void setActivePlayer(int activePlayer)
+	{
+		this.activePlayer = activePlayer;
+	}
+	
+	/**
+	 * all the interations enabled
+	 */
+	public void enable()
+	{
+		cardBoardOne.addMouseListener(cardBoardOne);
+		cardBoardTwo.addMouseListener(cardBoardTwo);
+		cardBoardThree.addMouseListener(cardBoardThree);
+		cardBoardFour.addMouseListener(cardBoardFour);
+		restartMenuItem.addActionListener(new RestartMenuItemListener());
+		quitMenuItem.addActionListener(new QuitMenuItemListener());
+		playButton.addActionListener(new PlayButtonListener());
+		passButton.addActionListener(new PassButtonListener());
+	}
+
+	/**
+	 * all the interaction disabled
+	 */
+	public void disable()
+	{
+		activePlayer = -1;
+		cardBoardOne.removeMouseListener(cardBoardOne);
+		cardBoardTwo.removeMouseListener(cardBoardTwo);
+		cardBoardThree.removeMouseListener(cardBoardThree);
+		cardBoardFour.removeMouseListener(cardBoardFour);
+		//restartMenuItem.removeActionListener(restartMenuItem.getActionListeners()[0]);
+		//quitMenuItem.removeActionListener(quitMenuItem.getActionListeners()[0]);
+	}
+
+	public void resetSelected()
+	{
+		cardBoardOne.selected = new boolean [cardBoardOne.number];
+		cardBoardTwo.selected = new boolean [cardBoardTwo.number];
+		cardBoardThree.selected = new boolean [cardBoardThree.number];
+		cardBoardFour.selected = new boolean [cardBoardFour.number];
+	}
+	
+
+	@Override
+	public int[] getSelected()
+	{
+		boolean [] activePlayerSelected = null;
+		switch(activePlayer)
+		{
+			case 0: 
+				activePlayerSelected = cardBoardOne.selected;
+				break;
+			case 1: 
+				activePlayerSelected = cardBoardTwo.selected;
+				break;
+			case 2: 
+				activePlayerSelected = cardBoardThree.selected;
+				break;
+			case 3:
+				activePlayerSelected = cardBoardFour.selected;
+				break;
+			default:
+				return null;
+		}
+		ArrayList<Integer> selectedCardList = new ArrayList<Integer>();
+		for(int i=0;i<activePlayerSelected.length;i++)
+		{
+			if(activePlayerSelected[i])
+				selectedCardList.add(i);
+		}
+		int [] selectedCards = new int [selectedCardList.size()];
+		for(int cardIdx:selectedCardList)
+		{
+			selectedCards[selectedCardList.indexOf(cardIdx)] = cardIdx;
+		}
+		return selectedCards;
+	}
+
+	@Override
+	public void repaint()
+	{
+		frame.repaint();
+	}
+
+	@Override
+	public void printMsg(String msg)
+	{
+		if(numOfPrints >= 20) 
+		{
+			clearMsgArea();
+			this.textArea.append("New Game: BigTwo\t\t\t\t\n");
+			numOfPrints = 0;
+		}
+		this.textArea.append(msg+"\n");
+		numOfPrints ++;
+	}
+
+	@Override
+	public void clearMsgArea()
+	{
+		this.textArea.setText(null);
+	}
+
+	@Override
+	public void reset()
+	{
+		//clean all the players' cards and the hands on table
+		for(CardGamePlayer ply : game.getPlayerList())
+		{
+			ply.removeAllCards();
+		}
+		game.getHandsOnTable().clear();
+		frame.repaint();
+		try
+		{
+			Thread.sleep(50);
+		}catch(Exception E) {}
+		
+		//invoke the animation
+		AnimationPanel cardDistribution = new AnimationPanel();
+
+		cardDistribution.setBackground(Color.BLUE);
+		cardBoard.remove(handsBoard);
+		cardBoard.add(cardDistribution);
+		frame.repaint();
+		//re-distribute the card
+		int playerWithD3 = -1;
+		setActivePlayer(playerWithD3);
+		game.getHandsOnTable().clear();
+		for(int i=0;i<4;i++)
+		{
+			game.getPlayerList().get(i).removeAllCards();
+		}
+		frame.repaint();
+		game.getDeck().shuffle();
+		for(int i=0;i<13;i++)
+		{
+			for(int j=0;j<4;j++)
+			{
+				cardDistribution.riseCard();
+				frame.repaint();
+				try
+				{
+					Thread.sleep(100);
+				}catch(Exception E){}
+				//cardDistribution.moveCardTo(i);
+				//frame.repaint();
+				//try
+				//{
+				//	Thread.sleep(100);
+				//}catch(Exception E){}
+				
+				Card cardToAdd = game.getDeck().getCard(j+4*i);
+				game.getPlayerList().get(j).addCard(cardToAdd);
+				
+				if(cardToAdd.getRank()==2 && cardToAdd.getSuit()==0)
+					playerWithD3 = j;
+				
+				cardDistribution.cardBack();
+				frame.repaint();
+				try
+				{
+					Thread.sleep(100);
+				}catch(Exception E){}
+			}
+		}
+		for(int i=0;i<4;i++)
+		{
+			game.getPlayerList().get(i).sortCardsInHand();
+		}
+		setActivePlayer(playerWithD3);
+		cardBoard.remove(cardDistribution);
+		cardBoard.add(handsBoard);
+	}
+
+	/**
+	 * Retrieve the active player
+	 * 
+	 * @return the index of the current active player
+	 */
+	public int getActivePlayer()
+	{
+		return this.activePlayer;
+	}
+
+
+	public void discloseAllPlayers()
+	{
+		disclose = true;
 	}
 }
