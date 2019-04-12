@@ -20,11 +20,9 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 
-
-
-public class CardGameLauncher implements CardGameTable
-{
+public class CardGameLauncher implements CardGameTable {
 	static final public int WIDTH_OF_CARD = 105;
 	static final public int HEIGHT_OF_CARD = 150;
 	static final public int DIST_BET_CARD = 21;
@@ -33,7 +31,7 @@ public class CardGameLauncher implements CardGameTable
 	static final public int DIST_SELECTED_TOP = 0;
 	static final public int PLAYER_PANEL_DIST = 200;
 
-	/*Decoration*/
+	/* Decoration */
 	static private Font menuFont;
 	static private Font buttonFont;
 	static private Font msgFont;
@@ -44,12 +42,11 @@ public class CardGameLauncher implements CardGameTable
 		msgFont = new Font(null, Font.ITALIC, 17);
 		totalPlayerNum = 0;
 	}
-	
+
 	/**
 	 * The inner class for each player's panel
 	 */
-	class CardBoard extends JPanel implements MouseListener
-	{
+	class CardBoard extends JPanel implements MouseListener {
 		private static final long serialVersionUID = 1L;
 		int playerNum;
 		private boolean selected[];
@@ -60,135 +57,123 @@ public class CardGameLauncher implements CardGameTable
 		 * 
 		 * @param number how many cards are the player initialized to be
 		 */
-		CardBoard(int number)
-		{
-			selected = new boolean [number];
+		CardBoard(int number) {
+			selected = new boolean[number];
 			this.number = number;
 			playerNum = totalPlayerNum;
 			totalPlayerNum++;
 		}
-		
+
 		@Override
-		public void paintComponent(Graphics g)
-		{
-			Image icon = new ImageIcon("img/Avator/"+playerNum+".png").getImage();
-			g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100+DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
-			for(int i=0;i<game.getPlayerList().get(playerNum).getNumOfCards();i++)
-			{
-				if(activePlayer == playerNum || disclose)
-				{
+		public void paintComponent(Graphics g) {
+			Image icon = new ImageIcon("img/Avator/" + playerNum + ".png").getImage();
+			g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100 + DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
+			for (int i = 0; i < game.getPlayerList().get(playerNum).getNumOfCards(); i++) {
+				if (activePlayer == playerNum || disclose) {
 					int rank = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getRank();
 					int suit = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getSuit();
-					Image cardTemp = new ImageIcon("img/pukeImage/"+suit+"_"+rank+".png").getImage();
-					g.drawImage(cardTemp, DIST_AVAT_CARD+i*DIST_BET_CARD, selected[i]?DIST_SELECTED_TOP:DIST_UNSELECTED_TOP, WIDTH_OF_CARD, HEIGHT_OF_CARD, this);	
-				}
-				else
-				{
+					Image cardTemp = new ImageIcon("img/pukeImage/" + suit + "_" + rank + ".png").getImage();
+					g.drawImage(cardTemp, DIST_AVAT_CARD + i * DIST_BET_CARD,
+							selected[i] ? DIST_SELECTED_TOP : DIST_UNSELECTED_TOP, WIDTH_OF_CARD, HEIGHT_OF_CARD, this);
+				} else {
 					Image cardTemp = new ImageIcon("img/pukeImage/back.png").getImage();
-					g.drawImage(cardTemp, DIST_AVAT_CARD+i*DIST_BET_CARD, DIST_UNSELECTED_TOP, WIDTH_OF_CARD, HEIGHT_OF_CARD, this);
+					g.drawImage(cardTemp, DIST_AVAT_CARD + i * DIST_BET_CARD, DIST_UNSELECTED_TOP, WIDTH_OF_CARD,
+							HEIGHT_OF_CARD, this);
 				}
 			}
 		}
 
 		@Override
-		public void mouseClicked(MouseEvent e) 
-		{
-			if(activePlayer != playerNum)	return;
-			int mouseX = e.getX()-DIST_AVAT_CARD;
-			int mouseY = e.getY()-DIST_SELECTED_TOP;
-			int number = game.getPlayerList().get(playerNum).getNumOfCards();
-			if(mouseX <0 || mouseY<0 || mouseX>DIST_BET_CARD*(number-1)+WIDTH_OF_CARD || mouseY>DIST_UNSELECTED_TOP+HEIGHT_OF_CARD)
+		public void mouseClicked(MouseEvent e) {
+			if (activePlayer != playerNum)
 				return;
-			//horizontally, number+2 areas
-			//vertically, 3 areas;
-			int areaX = (int)mouseX/DIST_BET_CARD; //i.e. one third of width
-			int areaY = mouseY<DIST_UNSELECTED_TOP?0:(mouseY<HEIGHT_OF_CARD?1:2);
+			int mouseX = e.getX() - DIST_AVAT_CARD;
+			int mouseY = e.getY() - DIST_SELECTED_TOP;
+			int number = game.getPlayerList().get(playerNum).getNumOfCards();
+			if (mouseX < 0 || mouseY < 0 || mouseX > DIST_BET_CARD * (number - 1) + WIDTH_OF_CARD
+					|| mouseY > DIST_UNSELECTED_TOP + HEIGHT_OF_CARD)
+				return;
+			// horizontally, number+2 areas
+			// vertically, 3 areas;
+			int areaX = (int) mouseX / DIST_BET_CARD; // i.e. one third of width
+			int areaY = mouseY < DIST_UNSELECTED_TOP ? 0 : (mouseY < HEIGHT_OF_CARD ? 1 : 2);
 			switch (areaY) {
-				case 0:
-					for(int i = areaX;i>areaX-5 && i>=0;i--)
-					{
-						if(selected[i>= number?number-1:i])
-						{
-							selected[i>= number?number-1:i] = false;
-							break;
-						}
+			case 0:
+				for (int i = areaX; i > areaX - 5 && i >= 0; i--) {
+					if (selected[i >= number ? number - 1 : i]) {
+						selected[i >= number ? number - 1 : i] = false;
+						break;
 					}
-					break;
-				case 1:
-					int cardIdx = areaX >= number?number-1:areaX;
-					selected[cardIdx] = selected[cardIdx]?false:true;
-					break;
-				case 2:
-					for(int i = areaX;i>areaX-5 && i>=0;i--)
-					{
-						if(!selected[i>= number?number-1:i])
-						{
-							selected[i>= number?number-1:i] = true;
-							break;
-						}
+				}
+				break;
+			case 1:
+				int cardIdx = areaX >= number ? number - 1 : areaX;
+				selected[cardIdx] = selected[cardIdx] ? false : true;
+				break;
+			case 2:
+				for (int i = areaX; i > areaX - 5 && i >= 0; i--) {
+					if (!selected[i >= number ? number - 1 : i]) {
+						selected[i >= number ? number - 1 : i] = true;
+						break;
 					}
-					break;
-				default:
-					break;
+				}
+				break;
+			default:
+				break;
 			}
 			frame.repaint();
 		}
 
 		@Override
-		public void mousePressed(MouseEvent e) {}
+		public void mousePressed(MouseEvent e) {
+		}
 
 		@Override
-		public void mouseReleased(MouseEvent e) {}
+		public void mouseReleased(MouseEvent e) {
+		}
 
 		@Override
-		public void mouseEntered(MouseEvent e) {}
+		public void mouseEntered(MouseEvent e) {
+		}
 
 		@Override
-		public void mouseExited(MouseEvent e) {}
-		
+		public void mouseExited(MouseEvent e) {
+		}
+
 	}
 
 	/**
 	 * For Drawing the board showing the top hand on table
 	 */
-	class HandsBoard extends JPanel
-	{
+	class HandsBoard extends JPanel {
 		@Override
-		public void paintComponent(Graphics g)
-		{
+		public void paintComponent(Graphics g) {
 			Image cardInHand = null;
 			int numOfHand = game.getHandsOnTable().size();
-			if(numOfHand!=0)
-			{
-				for(int i=0; i<game.getHandsOnTable().get(numOfHand-1).size(); i++)
-				{
-					int rank = game.getHandsOnTable().get(numOfHand-1).getCard(i).getRank();
-					int suit = game.getHandsOnTable().get(numOfHand-1).getCard(i).getSuit();
-					cardInHand = new ImageIcon("img/pukeImage/"+suit+"_"+rank+".png").getImage();
-					g.drawImage(cardInHand, (i+3)*DIST_BET_CARD, DIST_UNSELECTED_TOP, this);
+			if (numOfHand != 0) {
+				for (int i = 0; i < game.getHandsOnTable().get(numOfHand - 1).size(); i++) {
+					int rank = game.getHandsOnTable().get(numOfHand - 1).getCard(i).getRank();
+					int suit = game.getHandsOnTable().get(numOfHand - 1).getCard(i).getSuit();
+					cardInHand = new ImageIcon("img/pukeImage/" + suit + "_" + rank + ".png").getImage();
+					g.drawImage(cardInHand, (i + 3) * DIST_BET_CARD, DIST_UNSELECTED_TOP, this);
 				}
-			}	
+			}
 		}
 	}
 
 	/**
 	 * Realize the behavior of the play button when it is pressed
 	 */
-	class PlayButtonListener implements ActionListener
-	{
+	class PlayButtonListener implements ActionListener {
 		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			int [] selectedCards = getSelected();
-			if(selectedCards == null || selectedCards.length == 0)
-			{
+		public void actionPerformed(ActionEvent e) {
+			int[] selectedCards = getSelected();
+			if (selectedCards == null || selectedCards.length == 0) {
 				printMsg("You have to choose at least a card, or pass");
-			}
-			else
-			{
+			} else {
 				game.makeMove(activePlayer, selectedCards);
 				resetSelected();
-				frame.repaint();	
+				frame.repaint();
 			}
 		}
 	}
@@ -196,26 +181,22 @@ public class CardGameLauncher implements CardGameTable
 	/**
 	 * Realize the behavior of the pass button when it is pressed
 	 */
-	class PassButtonListener implements ActionListener
-	{
+	class PassButtonListener implements ActionListener {
 		@Override
-		public void actionPerformed(ActionEvent e)
-		{
+		public void actionPerformed(ActionEvent e) {
 			game.makeMove(activePlayer, null);
 			resetSelected();
 			frame.repaint();
 		}
 	}
-	
+
 	/**
-	 * Quit the game. The quit menu item is located in the Game menu which is located in the
-	 * menu bar at the top of the frame. 
+	 * Quit the game. The quit menu item is located in the Game menu which is
+	 * located in the menu bar at the top of the frame.
 	 */
-	class QuitMenuItemListener implements ActionListener
-	{
+	class QuitMenuItemListener implements ActionListener {
 		@Override
-		public void actionPerformed(ActionEvent e)
-		{
+		public void actionPerformed(ActionEvent e) {
 			disable();
 			frame.setVisible(false);
 			System.exit(0);
@@ -223,23 +204,27 @@ public class CardGameLauncher implements CardGameTable
 	}
 
 	/**
-	 * Restart the game. The restart menu item is inside the Game menu which is located in the
-	 * menu bar at the top of the frame. 
+	 * Restart the game. The restart menu item is inside the Game menu which is
+	 * located in the menu bar at the top of the frame.
 	 */
-	class RestartMenuItemListener implements ActionListener
-	{
+	class RestartMenuItemListener implements ActionListener {
 		@Override
-		public void actionPerformed(ActionEvent e)
-		{
+		public void actionPerformed(ActionEvent e) {
 			disable();
 			clearMsgArea();
-			
+
 			JFrame confirmation = new JFrame("Restarting");
-			confirmation.setSize(200,50);
+			JPanel showingPanel = new JPanel();
+			JTextPane text = new JTextPane();
+			text.setText("Restarting, please wait...");
+			showingPanel.add(text);
+			confirmation.add(showingPanel);
+			confirmation.setSize(600,100);
 			confirmation.setLocation(700,500);
 			confirmation.setVisible(true);
 			
 			game.start(game.getDeck());
+			disclose = false;
 			confirmation.setVisible(false);
 		}
 	}
@@ -318,7 +303,7 @@ public class CardGameLauncher implements CardGameTable
 		buttonPanel.add(playButton);
 		buttonPanel.add(passButton);
 		
-		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\t\t\n");
+		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\n");
 		textArea.setFont(msgFont);
 
 		
@@ -326,8 +311,8 @@ public class CardGameLauncher implements CardGameTable
 		frame.add(gameMenuBar, BorderLayout.NORTH);
 		frame.add(textArea,BorderLayout.EAST);
 		frame.add(buttonPanel,BorderLayout.SOUTH);
-		frame.setSize(1200, 1000);
-		frame.setLocation(300,100);
+		frame.setSize(1500, 1000);
+		frame.setLocation(200,100);
 		frame.setVisible(true);
 
 		this.activePlayer = -1;
@@ -444,6 +429,7 @@ public class CardGameLauncher implements CardGameTable
 	@Override
 	public void reset()
 	{
+		disclose = false;
 		//clean all the players' cards and the hands on table
 		for(CardGamePlayer ply : game.getPlayerList())
 		{
