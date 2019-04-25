@@ -1,0 +1,22 @@
+Socket Formate
+{
+  int playerID (by default -1; specified as the player's index, 0~4)
+  String data (by default Null)
+}
+----------------------------------Upstream--------------------------------------------------------------------
+TYPE        |  playerID    |    data                                                  |         Description
+JOIN        |  -1          |  Name of Player                                          | Reuqest for join the game after a connection is created i.e. a PLAYER_LIST returned; expect nothing
+READY       |  -1          |  NULL                                                    | every time a new game should start
+            | this ID      |  NULL                                                    | only when some guys quit the game in the middle
+MOVE        | -1           |  Indices of the cards being selected                     | when the player is active and choose to play or pass
+MSG         | -1           |  Text message in the text field                          | when the player type ENTER in the text area
+----------------------------------Downstream------------------------------------------------------------------
+TYPE        |  playerID    |    data                                                  |         Description
+PLAYER_LIST |newcomer's id | array of existing players' name                          | Sever: send back to the new comer if there are position(s); Client: create a new player list and update self-info
+FULL        | -1           | NULL                                                     | Sever: send back to the new comer if already 4 players; Client: display a message that you cannot join
+QUIT        | index        | IP+Port e.g. "/127.0.0.1:2396"                           | Sever: broadcast after connection lost; Client: remove him from the local player list and then return to READY mode
+JOIN        | index        | His name                                                 | Sever: broadcast after a new player joined; Client: add him to the local player list
+READY       | index        | NULL                                                     | Sever: broadcast after receiving READY; Client: display on the textborad
+START       | -1           | shuffled cards                                           | Sever: after all are ready; Client: start a new game
+MSG         | index        | name+IP+Port+msg e.g. "Kenneth (/127.0.0.1:2396):Hello!" | Sever: broadcast after convert the ID and the String; Client: show on the text board
+MOVE        | -1           | Indices of the cards being selected                      | Sever: broadcast directly; Client: check the move and display
