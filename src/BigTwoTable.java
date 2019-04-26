@@ -167,7 +167,10 @@ public class BigTwoTable implements CardGameTable {
 	/**
 	 * For Drawing the board showing the top hand on table
 	 */
-	class HandsBoard extends JPanel {
+	class HandsBoard extends JPanel
+	{
+		private static final long serialVersionUID = -8080570155611239398L;
+
 		@Override
 		public void paintComponent(Graphics g) {
 			Image cardInHand = null;

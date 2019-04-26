@@ -1,6 +1,5 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -14,7 +13,6 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -145,7 +143,10 @@ public class CardGameLauncher implements CardGameTable {
 	/**
 	 * For Drawing the board showing the top hand on table
 	 */
-	class HandsBoard extends JPanel {
+	class HandsBoard extends JPanel
+	{
+		private static final long serialVersionUID = -5160157529763255305L;
+
 		@Override
 		public void paintComponent(Graphics g) {
 			Image cardInHand = null;
