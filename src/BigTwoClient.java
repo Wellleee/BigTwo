@@ -1,76 +1,84 @@
+import java.net.*;
+import java.io.*;
 import java.util.ArrayList;
 
 public class BigTwoClient implements CardGame, NetworkGame
 {
 
+	/*
+	 * Private variables 
+	 */
+	int numOfPlayers; 				//number of existing numbers
+	Deck deck; 						//a shuffled deck, provided by the sever
+	ArrayList<CardGamePlayer> handsOnTable; //list of hands played on table
+	int playerID;					//index of local player
+	String playerName;				//specifying the player's name
+	String serverIP;
+	int serverPort;
+	Socket sock; 
+	ObjectOutputStream oos; 		//an ObjectOutputStream for sending messages to the server
+	int currentIdx;					//an integer specifying the index of the player for the current turn
+	BigTwoTable bigTwoTable;		//GUI
+	
 	@Override
 	public int getPlayerID() 
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return this.playerID;
 	}
 
 	@Override
 	public void setPlayerID(int playerID)
 	{
-		// TODO Auto-generated method stub
-
+		this.playerID = playerID;
 	}
 
 	@Override
 	public String getPlayerName()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return this.playerName;
 	}
 
 	@Override
 	public void setPlayerName(String playerName)
 	{
-		// TODO Auto-generated method stub
-
+		this.playerName = playerName;
 	}
 
 	@Override
 	public String getServerIP()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return this.serverIP;
 	}
 
 	@Override
 	public void setServerIP(String serverIP)
 	{
-		// TODO Auto-generated method stub
-
+		this.serverIP = serverIP;
 	}
 
 	@Override
 	public int getServerPort()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return this.serverPort;
 	}
 
 	@Override
 	public void setServerPort(int serverPort)
 	{
-		// TODO Auto-generated method stub
-
+		this.serverPort = serverPort;
 	}
 
 	@Override
 	public void makeConnection()
 	{
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void parseMessage(GameMessage message)
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
@@ -149,4 +157,15 @@ public class BigTwoClient implements CardGame, NetworkGame
 
 	}
 
+	class ServerHandler implements Runnable
+	{
+
+		@Override
+		public void run()
+		{
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 }
