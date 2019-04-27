@@ -1,10 +1,16 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -13,11 +19,13 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.JTextPane;
 
 public class BigTwoTable implements CardGameTable {
@@ -41,7 +49,7 @@ public class BigTwoTable implements CardGameTable {
 	 * the horizontal distance of an unselected card
 	 */
 	static final public int DIST_UNSELECTED_TOP = 20;
-		/**
+	/**
 	 * the horizontal distance of a selected card
 	 */
 	static final public int DIST_SELECTED_TOP = 0;
@@ -49,10 +57,14 @@ public class BigTwoTable implements CardGameTable {
 	 * the height of each player panel
 	 */
 	static final public int PLAYER_PANEL_DIST = 200;
+	/**
+	 * the maximum number of cards held by each player
+	 */
+	static final public int MAX_CARD_IN_HAND = 13;
 
 	/* Decoration */
 	static private Font menuFont;
-	static private Font buttonFont; 
+	static private Font buttonFont;
 	static private Font msgFont;
 	static private int totalPlayerNum;
 	{
@@ -72,6 +84,9 @@ public class BigTwoTable implements CardGameTable {
 		 */
 		int playerNum;
 		private boolean selected[];
+		/**
+		 * the number of cards being selected
+		 */
 		private int number = 0;
 
 		/**
@@ -87,11 +102,14 @@ public class BigTwoTable implements CardGameTable {
 		}
 
 		@Override
-		public void paintComponent(Graphics g) {
+		public void paintComponent(Graphics g)
+		{
+			if(game.getPlayerList().size()<=this.playerNum)					return; //not enough guys yet
+			g.drawString(game.getPlayerList().get(playerNum).getName(), 0, 0);
 			Image icon = new ImageIcon("img/Avator/" + playerNum + ".png").getImage();
 			g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100 + DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
 			for (int i = 0; i < game.getPlayerList().get(playerNum).getNumOfCards(); i++) {
-				if (activePlayer == playerNum || disclose) {
+				if (((BigTwoClient) game).getPlayerID() == playerNum || disclose) {
 					int rank = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getRank();
 					int suit = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getSuit();
 					Image cardTemp = new ImageIcon("img/pukeImage/" + suit + "_" + rank + ".png").getImage();
@@ -107,7 +125,7 @@ public class BigTwoTable implements CardGameTable {
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			if (activePlayer != playerNum)
+			if (((BigTwoClient) game).getPlayerID() != playerNum)
 				return;
 			int mouseX = e.getX() - DIST_AVAT_CARD;
 			int mouseY = e.getY() - DIST_SELECTED_TOP;
@@ -167,8 +185,7 @@ public class BigTwoTable implements CardGameTable {
 	/**
 	 * For Drawing the board showing the top hand on table
 	 */
-	class HandsBoard extends JPanel
-	{
+	class HandsBoard extends JPanel {
 		private static final long serialVersionUID = -8080570155611239398L;
 
 		@Override
@@ -189,14 +206,19 @@ public class BigTwoTable implements CardGameTable {
 	/**
 	 * Realize the behavior of the play button when it is pressed
 	 */
-	class PlayButtonListener implements ActionListener {
+	class PlayButtonListener implements ActionListener
+	{
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent e)
+		{
 			int[] selectedCards = getSelected();
-			if (selectedCards == null || selectedCards.length == 0) {
+			if (selectedCards == null || selectedCards.length == 0)
+			{
 				printMsg("You have to choose at least a card, or pass");
-			} else {
-				game.makeMove(activePlayer, selectedCards);
+			}
+			else
+			{
+				game.makeMove(((BigTwoClient) game).getPlayerID(), selectedCards);
 				resetSelected();
 				frame.repaint();
 			}
@@ -209,7 +231,7 @@ public class BigTwoTable implements CardGameTable {
 	class PassButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			game.makeMove(activePlayer, null);
+			game.makeMove(((BigTwoClient) game).getPlayerID(), null);
 			resetSelected();
 			frame.repaint();
 		}
@@ -219,10 +241,11 @@ public class BigTwoTable implements CardGameTable {
 	 * Quit the game. The quit menu item is located in the Game menu which is
 	 * located in the menu bar at the top of the frame.
 	 */
-	class QuitMenuItemListener implements ActionListener {
+	class QuitMenuItemListener implements ActionListener
+	{
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			disable();
+		public void actionPerformed(ActionEvent e)
+		{
 			frame.setVisible(false);
 			System.exit(0);
 		}
@@ -232,26 +255,46 @@ public class BigTwoTable implements CardGameTable {
 	 * Restart the game. The restart menu item is inside the Game menu which is
 	 * located in the menu bar at the top of the frame.
 	 */
-	class RestartMenuItemListener implements ActionListener {
+	class ConnectionMenuItemListener implements ActionListener
+	{
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent e)
+		{
 			disable();
 			clearMsgArea();
 
-			JFrame confirmation = new JFrame("Restarting");
+			JFrame confirmation = new JFrame("Re-Connecting");
 			JPanel showingPanel = new JPanel();
 			JTextPane text = new JTextPane();
 			text.setText("Restarting, please wait...");
 			showingPanel.add(text);
 			confirmation.add(showingPanel);
-			confirmation.setSize(600,100);
-			confirmation.setLocation(700,500);
+			confirmation.setSize(600, 100);
+			confirmation.setLocation(700, 500);
 			confirmation.setVisible(true);
-			
-			game.start(game.getDeck());
+
+			((BigTwoClient) game).severConnection();
+			((BigTwoClient) game).makeConnection();
 			disclose = false;
 			confirmation.setVisible(false);
 		}
+	}
+
+	class MessageSendListener implements KeyListener
+	{
+
+		@Override
+		public void keyTyped(KeyEvent e)
+		{
+			//TODO
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {}
+
+		@Override
+		public void keyReleased(KeyEvent e){}
+		
 	}
 
 	private CardGame game;
@@ -259,7 +302,7 @@ public class BigTwoTable implements CardGameTable {
 	private JFrame frame;
 	private JMenuBar gameMenuBar;
 	private JMenu gameMenu;
-	private JMenuItem restartMenuItem;
+	private JMenuItem connectionMenuItem;
 	private JMenuItem quitMenuItem;
 	private JPanel cardBoard;
 	private CardBoard cardBoardOne;
@@ -272,10 +315,12 @@ public class BigTwoTable implements CardGameTable {
 	private JPanel buttonPanel;
 	private JButton playButton;
 	private JButton passButton;
+	private JLabel inputLabel;
+	private JTextField inputField;
 	
 	private JTextArea textArea;
-
-	private int activePlayer;
+	private JTextArea chatArea;
+	private JPanel textPanel;
 
 	private boolean disclose;
 	
@@ -288,31 +333,31 @@ public class BigTwoTable implements CardGameTable {
 	{
 		this.game = game;
 
-		frame = new JFrame();
+		frame = new JFrame("BigTwo");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		cardBoard = new JPanel();
 		gameMenuBar = new JMenuBar();
 		gameMenu = new JMenu("Game");
 		gameMenu.setFont(menuFont);
-		restartMenuItem = new JMenuItem("Restart");
+		connectionMenuItem = new JMenuItem("Connecting");
 		quitMenuItem = new JMenuItem("Quit");
 
-		gameMenu.add(restartMenuItem);
+		gameMenu.add(connectionMenuItem);
 		gameMenu.add(quitMenuItem);
 		gameMenuBar.add(gameMenu);
 
 		cardBoard.setBackground(Color.DARK_GRAY);
 		
-		cardBoardOne = new CardBoard(13);
+		cardBoardOne = new CardBoard(MAX_CARD_IN_HAND);
 		cardBoard.add(cardBoardOne);
 
-		cardBoardTwo = new CardBoard(13);
+		cardBoardTwo = new CardBoard(MAX_CARD_IN_HAND);
 		cardBoard.add(cardBoardTwo);
 
-		cardBoardThree = new CardBoard(13);
+		cardBoardThree = new CardBoard(MAX_CARD_IN_HAND);
 		cardBoard.add(cardBoardThree);
 
-		cardBoardFour = new CardBoard(13);
+		cardBoardFour = new CardBoard(MAX_CARD_IN_HAND);
 		cardBoard.add(cardBoardFour);
 
 		handsBoard = new HandsBoard();
@@ -325,61 +370,85 @@ public class BigTwoTable implements CardGameTable {
 		playButton.setFont(buttonFont);
 		passButton = new JButton("Pass");
 		passButton.setFont(buttonFont);
-		buttonPanel.add(playButton);
-		buttonPanel.add(passButton);
+		inputLabel = new JLabel("Message");
+		inputLabel.setFont(menuFont);
+		inputField = new JTextField();
+		inputField.setMinimumSize(new Dimension(20, 300));
+
+		buttonPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.weighty = 0.1;
+		c.insets = new Insets(2, 2, 70, 70);
+		c.anchor = GridBagConstraints.CENTER;
+		buttonPanel.add(playButton, c);
+
+		c.gridx = 1;
+		c.insets.right = 250;
+		buttonPanel.add(passButton, c);
+
+		c.gridx = 2;
+		c.insets.right = 0;
+		buttonPanel.add(inputLabel, c);
+
+		c.gridx = 3;
+		c.insets.left = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.ipadx = 500;
+		buttonPanel.add(inputField, c);
 		
 		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\n");
 		textArea.setFont(msgFont);
+		chatArea = new JTextArea("Chat Box: BigTwo\t\t\t\t\n");
+		chatArea.setFont(msgFont);
+		textPanel = new JPanel();
+		textPanel.add(textArea);
+		textPanel.add(chatArea);
 
-		
+		textPanel.setLayout(new BoxLayout(this.textPanel,BoxLayout.Y_AXIS));
+
 		frame.add(cardBoard);
 		frame.add(gameMenuBar, BorderLayout.NORTH);
-		frame.add(textArea,BorderLayout.EAST);
+		frame.add(textPanel,BorderLayout.EAST);
 		frame.add(buttonPanel,BorderLayout.SOUTH);
 		frame.setSize(1500, 1000);
 		frame.setLocation(200,100);
 		frame.setVisible(true);
-
-		this.activePlayer = -1;
 	}
 
-	/**
-	 * set the activeplayer
-	 * 
-	 * @param activePlayer index of the activeplayer
-	 */
-	public void setActivePlayer(int activePlayer)
-	{
-		this.activePlayer = activePlayer;
-	}
 	
 	/**
 	 * all the interations enabled
 	 */
-	public void enable()
+	public void go()
 	{
 		cardBoardOne.addMouseListener(cardBoardOne);
 		cardBoardTwo.addMouseListener(cardBoardTwo);
 		cardBoardThree.addMouseListener(cardBoardThree);
 		cardBoardFour.addMouseListener(cardBoardFour);
-		restartMenuItem.addActionListener(new RestartMenuItemListener());
+		connectionMenuItem.addActionListener(new ConnectionMenuItemListener());
 		quitMenuItem.addActionListener(new QuitMenuItemListener());
 		playButton.addActionListener(new PlayButtonListener());
 		passButton.addActionListener(new PassButtonListener());
+		frame.addKeyListener(new MessageSendListener());
 	}
 
-	/**
-	 * all the interaction disabled
-	 */
+	@Override
+	public void enable()
+	{
+		playButton.setEnabled(true);
+		passButton.setEnabled(true);
+	}
+
+	@Override
 	public void disable()
 	{
-		activePlayer = -1;
-		cardBoardOne.removeMouseListener(cardBoardOne);
-		cardBoardTwo.removeMouseListener(cardBoardTwo);
-		cardBoardThree.removeMouseListener(cardBoardThree);
-		cardBoardFour.removeMouseListener(cardBoardFour);
-		//restartMenuItem.removeActionListener(restartMenuItem.getActionListeners()[0]);
-		//quitMenuItem.removeActionListener(quitMenuItem.getActionListeners()[0]);
+		playButton.setEnabled(false);
+		passButton.setEnabled(false);
 	}
 
 	/**
@@ -398,7 +467,7 @@ public class BigTwoTable implements CardGameTable {
 	public int[] getSelected()
 	{
 		boolean [] activePlayerSelected = null;
-		switch(activePlayer)
+		switch(((BigTwoClient)game).getPlayerID())
 		{
 			case 0: 
 				activePlayerSelected = cardBoardOne.selected;
@@ -528,20 +597,24 @@ public class BigTwoTable implements CardGameTable {
 	}
 
 	/**
-	 * Retrieve the active player
-	 * 
-	 * @return the index of the current active player
-	 */
-	public int getActivePlayer()
-	{
-		return this.activePlayer;
-	}
-
-	/**
 	 * show all the cards remained in all players
 	 */
 	public void discloseAllPlayers()
 	{
 		disclose = true;
+	}
+
+	/**
+	 * Print message to the chatting block
+	 */
+	public void printChat(String str)
+	{
+		//TODO
+	}
+
+	@Override
+	public void setActivePlayer(int activePlayer)
+	{
+		((BigTwoClient)game).setPlayerID(activePlayer);
 	}
 }

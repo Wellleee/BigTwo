@@ -101,6 +101,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			System.out.println("Fail to connect the server");
 			errorMsg = "Fail to connect the server";
 			errorFlag = true;
+			return;
 		}
 		try
 		{
@@ -110,6 +111,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			System.out.println("Fail to send request to the sever");
 			errorMsg = "Fail to send request to the sever";
 			errorFlag = true;
+			return;
 		}
 		//create a new thread for downward communication
 		Runnable commuJob = new ServerHandler();
@@ -125,6 +127,13 @@ public class BigTwoClient implements CardGame, NetworkGame
 		if(!sock.isClosed())	sendMessage(connecting);
 	}
 
+	public void severConnection()
+	{
+		try
+		{
+			sock.close();
+		} catch (Exception e) {}
+	}
 	@Override
 	public synchronized void parseMessage(GameMessage message)
 	{
@@ -244,6 +253,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 		bigTwoTable.reset();
 		//Interaction begin
 		bigTwoTable.repaint();
+		bigTwoTable.go();
 	}
 
 	@Override
@@ -281,7 +291,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 				player.removeCards(cardInHand);
 				bigTwoTable.printMsg("{"+hand.getType()+"} ");
 				bigTwoTable.printMsg(hand.toString());
-				bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
+				this.currentIdx = (playerID+1)%getNumOfPlayers();
 			}
 			else
 			{
@@ -406,6 +416,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 		BigTwoClient gameClient = new BigTwoClient();
 		//BigTwoDeck deck = new BigTwoDeck(); done in parseMessage, downStreamThread
 		//game.start(deck); done in parseMessage, downStreamThread
+		//gameClient.makeConnection(); invoke by dialogue
 	}
 
 	class ServerHandler implements Runnable
