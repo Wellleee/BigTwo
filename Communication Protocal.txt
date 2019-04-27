@@ -20,3 +20,19 @@ READY       | index        | NULL                                               
 START       | -1           | shuffled cards                                           | Sever: after all are ready; Client: start a new game
 MSG         | index        | name+IP+Port+msg e.g. "Kenneth (/127.0.0.1:2396):Hello!" | Sever: broadcast after convert the ID and the String; Client: show on the text board
 MOVE        | -1           | Indices of the cards being selected                      | Sever: broadcast directly; Client: check the move and display
+
+=======================GUI Features for Communication=========================================================
+1. menu bar and event
+  1.1 restart menuitem -> connection menuitem
+  1.2 new menu: message
+2. textArea event
+  2.1 enter press
+3. no updating the activePlayer
+4. dialogue
+  4.1 dialogue for entering the player's name
+  4.2 dialogue for entering the host server IP and Port
+  4.3 dialogue at the end of the game
+5. ban or modify the start(restart) animation
+6. modify the disable and enable
+6.1 change the location of registing
+6.2 enable / disable: methods for the button

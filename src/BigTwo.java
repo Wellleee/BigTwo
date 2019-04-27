@@ -250,7 +250,7 @@ public class BigTwo implements CardGame
 		}
 		else //pass
 		{
-			if(handsOnTable.size()==0 || playerList.get(playerID) != handsOnTable.get(handsOnTable.size()-1).getPlayer())
+			if(handsOnTable.size()!=0 && playerList.get(playerID) != handsOnTable.get(handsOnTable.size()-1).getPlayer())
 			{
 				bigTwoTable.printMsg("{Pass}");
 				bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
