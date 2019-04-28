@@ -61,6 +61,10 @@ public class BigTwoTable implements CardGameTable {
 	 * the maximum number of cards held by each player
 	 */
 	static final public int MAX_CARD_IN_HAND = 13;
+	/*
+	 * The total number of players in each game
+	 */
+	public static final int TOTAL_NUM_OF_PLAYERS = 4;
 
 	/* Decoration */
 	static private Font menuFont;
@@ -119,7 +123,11 @@ public class BigTwoTable implements CardGameTable {
 				{
 					nameStr = nameStr + " (You)";
 				}
-				g.drawString(nameStr, 5, DIST_UNSELECTED_TOP);
+				if(game.getCurrentIdx()==playerNum)
+				{
+					nameStr = "[Current Active]" + nameStr;
+				}
+				g.drawString(nameStr, 5, DIST_UNSELECTED_TOP/2);
 				Image icon = new ImageIcon("img/Avator/" + playerNum + ".png").getImage();
 				g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100 + DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
 				for (int i = 0; i < game.getPlayerList().get(playerNum).getNumOfCards(); i++)
@@ -275,6 +283,8 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
+			((BigTwoClient)game).severConnection();
+			
 			System.exit(0);
 		}
 	}
@@ -296,6 +306,9 @@ public class BigTwoTable implements CardGameTable {
 		}
 	}
 
+	/**
+	 * Realize the feature that when pressing a key, the message will be sent out
+	 */
 	class MessageSendListener implements KeyListener
 	{
 
@@ -307,6 +320,7 @@ public class BigTwoTable implements CardGameTable {
 			{
 				//send the message out
 				String msg = inputField.getText();
+				System.out.println("Get the text: "+msg);
 				CardGameMessage toSend = new CardGameMessage(CardGameMessage.MSG, ((BigTwoClient)game).getPlayerID(), msg);
 				((BigTwoClient)game).sendMessage(toSend);
 				inputField.setText(null);
@@ -416,14 +430,15 @@ public class BigTwoTable implements CardGameTable {
 		buttonPanel.add(passButton, c);
 
 		c.gridx = 2;
-		c.insets.left = 200;
+		c.insets.left = 220;
 		c.insets.right = 0;
 		buttonPanel.add(inputLabel, c);
 
 		c.gridx = 3;
-		c.insets.left = 0;
+		c.insets.left = 50;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.ipadx = 500;
+		c.ipady = 25;
 		buttonPanel.add(inputField, c);
 		buttonPanel.setSize(1500, 50);
 		
@@ -468,7 +483,7 @@ public class BigTwoTable implements CardGameTable {
 		quitMenuItem.addActionListener(new QuitMenuItemListener());
 		playButton.addActionListener(new PlayButtonListener());
 		passButton.addActionListener(new PassButtonListener());
-		frame.addKeyListener(new MessageSendListener());
+		inputField.addKeyListener(new MessageSendListener());
 	}
 
 	@Override
@@ -592,15 +607,15 @@ public class BigTwoTable implements CardGameTable {
 		int playerWithD3 = -1;
 		setActivePlayer(playerWithD3);
 		game.getHandsOnTable().clear();
-		for(int i=0;i<4;i++)
+		for(int i=0;i<TOTAL_NUM_OF_PLAYERS;i++)
 		{
 			game.getPlayerList().get(i).removeAllCards();
 		}
 		frame.repaint();
 		game.getDeck().shuffle();
-		for(int i=0;i<13;i++)
+		for(int i=0;i<MAX_CARD_IN_HAND;i++)
 		{
-			for(int j=0;j<4;j++)
+			for(int j=0;j<TOTAL_NUM_OF_PLAYERS;j++)
 			{
 				cardDistribution.riseCard();
 				frame.repaint();
@@ -615,7 +630,7 @@ public class BigTwoTable implements CardGameTable {
 				//	Thread.sleep(100);
 				//}catch(Exception E){}
 				
-				Card cardToAdd = game.getDeck().getCard(j+4*i);
+				Card cardToAdd = game.getDeck().getCard(j+TOTAL_NUM_OF_PLAYERS*i);
 				game.getPlayerList().get(j).addCard(cardToAdd);
 				
 				if(cardToAdd.getRank()==2 && cardToAdd.getSuit()==0)
@@ -629,7 +644,7 @@ public class BigTwoTable implements CardGameTable {
 				}catch(Exception E){}
 			}
 		}
-		for(int i=0;i<4;i++)
+		for(int i=0;i<TOTAL_NUM_OF_PLAYERS;i++)
 		{
 			game.getPlayerList().get(i).sortCardsInHand();
 		}

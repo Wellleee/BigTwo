@@ -4,10 +4,15 @@ import java.util.ArrayList;
 
 public class BigTwoClient implements CardGame, NetworkGame
 {
-
-	/*
-	 * Private variables 
+	//constant
+	/**
+	 * The total number of players in each game
 	 */
+	public static final int TOTAL_NUM_OF_PLAYERS = 4;
+	
+	
+
+	//Private variables
 	private String errorMsg;				//Error message to be shown on the GUI
 	private boolean errorFlag; 				//Flag to determine whether error occurs
 	private int numOfPlayers; 				//number of existing numbers
@@ -127,6 +132,9 @@ public class BigTwoClient implements CardGame, NetworkGame
 		System.out.println("Send Ready");
 	}
 
+	/**
+	 * Sever the connection with the server
+	 */
 	public void severConnection()
 	{
 		try
@@ -134,6 +142,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			sock.close();
 		} catch (Exception e) {}
 	}
+	
 	@Override
 	public synchronized void parseMessage(GameMessage message)
 	{
@@ -180,7 +189,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 				{
 					this.playerList.get(message.getPlayerID()).setName(null);
 					this.playerList.get(message.getPlayerID()).removeAllCards();
-					bigTwoTable.printMsg("Player "+message.getPlayerID()+" quit the game.");
+					bigTwoTable.printMsg("Player <"+playerList.get(message.getPlayerID()).getName()+"> quit the game.");
 					if(!endOfGame())
 					{
 						//stop the game
@@ -194,7 +203,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 				break;
 			case CardGameMessage.READY:
 				System.out.println("Received READY from Server");
-				bigTwoTable.printMsg("Player "+message.getPlayerID()+" is ready.");
+				bigTwoTable.printMsg("Player <"+playerList.get(message.getPlayerID()).getName()+" is ready.");
 				break;
 			case CardGameMessage.START:
 				System.out.println("Received START from Server");
@@ -260,6 +269,8 @@ public class BigTwoClient implements CardGame, NetworkGame
 	public void setCurrentIdx(int currentIdx)
 	{
 		this.currentIdx = currentIdx;
+		if(currentIdx >= 0 && currentIdx < TOTAL_NUM_OF_PLAYERS)
+			bigTwoTable.printMsg(playerList.get(currentIdx).getName()+"'s Turn");
 	}
 
 	@Override
@@ -271,7 +282,6 @@ public class BigTwoClient implements CardGame, NetworkGame
 		bigTwoTable.reset();
 		//Interaction begin
 		bigTwoTable.repaint();
-		bigTwoTable.go();
 	}
 
 	@Override
@@ -307,25 +317,25 @@ public class BigTwoClient implements CardGame, NetworkGame
 			{
 				handsOnTable.add(hand);
 				player.removeCards(cardInHand);
-				bigTwoTable.printMsg("{"+hand.getType()+"} ");
+				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: {"+hand.getType()+"} ");
 				bigTwoTable.printMsg(hand.toString());
-				this.currentIdx = (playerID+1)%getNumOfPlayers();
+				bigTwoTable.setActivePlayer((playerID+1)%TOTAL_NUM_OF_PLAYERS);
 			}
 			else
 			{
-				bigTwoTable.printMsg("Not a legal move");
+				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: Not a legal move");
 			}//end of a non-pass moving
 		}
 		else //pass
 		{
 			if(handsOnTable.size()!=0 && playerList.get(playerID) != handsOnTable.get(handsOnTable.size()-1).getPlayer())
 			{
-				bigTwoTable.printMsg("{Pass}");
+				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: {Pass}");
 				bigTwoTable.setActivePlayer((playerID+1)%4);
 			}
 			else
 			{
-				bigTwoTable.printMsg("Not a legal move");
+				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: Not a legal pass");
 			}
 		}
 		//bigTwoTable.repaint() ---- no need, already included in setActiveplayer
@@ -431,6 +441,11 @@ public class BigTwoClient implements CardGame, NetworkGame
 		return hand;
 	}
 
+	/**
+	 * Main method to start the online version of the Big Two game
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args)
 	{
 		//With in the main stream, create a new client instance for handling
@@ -445,6 +460,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 		gameClient.setServerIP(IPPort[0]);
 		gameClient.setServerPort(Integer.parseInt(IPPort[1]));
 		gameClient.makeConnection();
+		gameClient.bigTwoTable.go();
 		while(true)
 		{
 			if(gameClient.errorFlag)
@@ -455,7 +471,14 @@ public class BigTwoClient implements CardGame, NetworkGame
 			}
 		}
 	}
-	class ServerHandler implements Runnable
+	
+	/**
+	 * This is the inner class for the communication thread
+	 * 
+	 * @author davidLiu
+	 *
+	 */
+	private class ServerHandler implements Runnable
 	{
 		@Override
 		public void run()
