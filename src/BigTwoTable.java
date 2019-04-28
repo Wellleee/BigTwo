@@ -94,7 +94,8 @@ public class BigTwoTable implements CardGameTable {
 		 * 
 		 * @param number how many cards are the player initialized to be
 		 */
-		CardBoard(int number) {
+		CardBoard(int number)
+		{
 			selected = new boolean[number];
 			this.number = number;
 			playerNum = totalPlayerNum;
@@ -105,13 +106,20 @@ public class BigTwoTable implements CardGameTable {
 		public void paintComponent(Graphics g)
 		{
 			//first determine whether this player is online
-			if(game.getPlayerList().size()<=playerNum || game.getPlayerList().get(this.playerNum).getName()==null)
+			g.setColor(Color.WHITE);
+			g.setFont(menuFont);
+			if(game.getPlayerList().size()==0 || game.getPlayerList().get(this.playerNum).getName()==null)
 			{
-				g.drawString("Offline", 0, 0);
+				g.drawString("Offline", 5, DIST_UNSELECTED_TOP);
 			}
 			else
 			{
-				g.drawString(game.getPlayerList().get(playerNum).getName(), 0, 0);
+				String nameStr = game.getPlayerList().get(playerNum).getName();
+				if(((BigTwoClient)game).getPlayerID()==playerNum)
+				{
+					nameStr = nameStr + " (You)";
+				}
+				g.drawString(nameStr, 5, DIST_UNSELECTED_TOP);
 				Image icon = new ImageIcon("img/Avator/" + playerNum + ".png").getImage();
 				g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100 + DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
 				for (int i = 0; i < game.getPlayerList().get(playerNum).getNumOfCards(); i++)
@@ -135,7 +143,8 @@ public class BigTwoTable implements CardGameTable {
 		}
 
 		@Override
-		public void mouseClicked(MouseEvent e) {
+		public void mouseClicked(MouseEvent e)
+		{
 			if (((BigTwoClient) game).getPlayerID() != playerNum)
 				return;
 			int mouseX = e.getX() - DIST_AVAT_CARD;
@@ -148,55 +157,57 @@ public class BigTwoTable implements CardGameTable {
 			// vertically, 3 areas;
 			int areaX = (int) mouseX / DIST_BET_CARD; // i.e. one third of width
 			int areaY = mouseY < DIST_UNSELECTED_TOP ? 0 : (mouseY < HEIGHT_OF_CARD ? 1 : 2);
-			switch (areaY) {
-			case 0:
-				for (int i = areaX; i > areaX - 5 && i >= 0; i--) {
-					if (selected[i >= number ? number - 1 : i]) {
-						selected[i >= number ? number - 1 : i] = false;
-						break;
+			switch (areaY)
+			{
+				case 0:
+					for (int i = areaX; i > areaX - 5 && i >= 0; i--)
+					{
+						if (selected[i >= number ? number - 1 : i])
+						{
+							selected[i >= number ? number - 1 : i] = false;
+							break;
+						}
 					}
-				}
-				break;
-			case 1:
-				int cardIdx = areaX >= number ? number - 1 : areaX;
-				selected[cardIdx] = selected[cardIdx] ? false : true;
-				break;
-			case 2:
-				for (int i = areaX; i > areaX - 5 && i >= 0; i--) {
-					if (!selected[i >= number ? number - 1 : i]) {
-						selected[i >= number ? number - 1 : i] = true;
-						break;
+					break;
+				case 1:
+					int cardIdx = areaX >= number ? number - 1 : areaX;
+					selected[cardIdx] = selected[cardIdx] ? false : true;
+					break;
+				case 2:
+					for (int i = areaX; i > areaX - 5 && i >= 0; i--)
+					{
+						if (!selected[i >= number ? number - 1 : i])
+						{
+							selected[i >= number ? number - 1 : i] = true;
+							break;
+						}
 					}
-				}
-				break;
-			default:
-				break;
+					break;
+				default:
+					break;
 			}
 			frame.repaint();
 		}
 
 		@Override
-		public void mousePressed(MouseEvent e) {
-		}
+		public void mousePressed(MouseEvent e) {}
 
 		@Override
-		public void mouseReleased(MouseEvent e) {
-		}
+		public void mouseReleased(MouseEvent e) {}
 
 		@Override
-		public void mouseEntered(MouseEvent e) {
-		}
+		public void mouseEntered(MouseEvent e) {}
 
 		@Override
-		public void mouseExited(MouseEvent e) {
-		}
+		public void mouseExited(MouseEvent e) {}
 
 	}
 
 	/**
 	 * For Drawing the board showing the top hand on table
 	 */
-	class HandsBoard extends JPanel {
+	class HandsBoard extends JPanel
+	{
 		private static final long serialVersionUID = -8080570155611239398L;
 
 		@Override

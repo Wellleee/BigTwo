@@ -118,13 +118,6 @@ public class BigTwoClient implements CardGame, NetworkGame
 		Thread commuThread = new Thread(commuJob);
 		commuThread.start();
 		//send the JOIN
-		while(playerList.size()==0)
-		{
-			try
-			{
-				Thread.sleep(1);
-			} catch (InterruptedException e) {}
-		}
 		CardGameMessage connecting = new CardGameMessage(CardGameMessage.JOIN, -1, this.playerName);
 		if(!sock.isClosed())	sendMessage(connecting);
 		System.out.println("Send Join");
@@ -160,9 +153,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			//When receiving JOIN, i.e. a new comer
 			//should add the player into the player list
 				System.out.println("Received JOIN from Server");
-				CardGamePlayer newPlayer = new CardGamePlayer((String)message.getData());
-				this.playerList.add(message.getPlayerID(),newPlayer);
-				this.numOfPlayers++;
+				this.playerList.get(message.getPlayerID()).setName((String)message.getData());
 				break;
 			case CardGameMessage.MOVE:
 				System.out.println("Received MOVE from Server");
@@ -180,15 +171,15 @@ public class BigTwoClient implements CardGame, NetworkGame
 				for(int i=0;i<nameList.length;i++)
 				{
 					playerList.add(new CardGamePlayer(nameList[i]));
-					numOfPlayers++;
+					if(nameList[i]!=null)	numOfPlayers++;
 				}
 				playerList.get(playerID).setName(playerName);
 			case CardGameMessage.QUIT:
 				System.out.println("Received QUIT from Server: "+message.getPlayerID());
 				if(playerID != message.getPlayerID())
 				{
-					this.playerList.remove(message.getPlayerID());
-					this.numOfPlayers--;
+					this.playerList.get(message.getPlayerID()).setName(null);
+					this.playerList.get(message.getPlayerID()).removeAllCards();
 					bigTwoTable.printMsg("Player "+message.getPlayerID()+" quit the game.");
 					if(!endOfGame())
 					{
@@ -275,6 +266,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 	public void start(Deck deck)
 	{
 		this.deck = deck;
+		System.out.println(deck.toString());
 		//then distribute the cards
 		bigTwoTable.reset();
 		//Interaction begin
@@ -329,7 +321,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			if(handsOnTable.size()!=0 && playerList.get(playerID) != handsOnTable.get(handsOnTable.size()-1).getPlayer())
 			{
 				bigTwoTable.printMsg("{Pass}");
-				bigTwoTable.setActivePlayer((playerID+1)%getNumOfPlayers());
+				bigTwoTable.setActivePlayer((playerID+1)%4);
 			}
 			else
 			{
