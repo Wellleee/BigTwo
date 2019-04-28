@@ -27,7 +27,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
 
 public class BigTwoTable implements CardGameTable {
 	/**
@@ -105,21 +104,32 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void paintComponent(Graphics g)
 		{
-			if(game.getPlayerList().size()<=this.playerNum)					return; //not enough guys yet
-			g.drawString(game.getPlayerList().get(playerNum).getName(), 0, 0);
-			Image icon = new ImageIcon("img/Avator/" + playerNum + ".png").getImage();
-			g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100 + DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
-			for (int i = 0; i < game.getPlayerList().get(playerNum).getNumOfCards(); i++) {
-				if (((BigTwoClient) game).getPlayerID() == playerNum || disclose) {
-					int rank = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getRank();
-					int suit = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getSuit();
-					Image cardTemp = new ImageIcon("img/pukeImage/" + suit + "_" + rank + ".png").getImage();
-					g.drawImage(cardTemp, DIST_AVAT_CARD + i * DIST_BET_CARD,
-							selected[i] ? DIST_SELECTED_TOP : DIST_UNSELECTED_TOP, WIDTH_OF_CARD, HEIGHT_OF_CARD, this);
-				} else {
-					Image cardTemp = new ImageIcon("img/pukeImage/back.png").getImage();
-					g.drawImage(cardTemp, DIST_AVAT_CARD + i * DIST_BET_CARD, DIST_UNSELECTED_TOP, WIDTH_OF_CARD,
-							HEIGHT_OF_CARD, this);
+			//first determine whether this player is online
+			if(game.getPlayerList().size()<=playerNum || game.getPlayerList().get(this.playerNum).getName()==null)
+			{
+				g.drawString("Offline", 0, 0);
+			}
+			else
+			{
+				g.drawString(game.getPlayerList().get(playerNum).getName(), 0, 0);
+				Image icon = new ImageIcon("img/Avator/" + playerNum + ".png").getImage();
+				g.drawImage(icon, 0, DIST_UNSELECTED_TOP, 100, 100 + DIST_UNSELECTED_TOP, 0, 0, 1280, 1280, this);
+				for (int i = 0; i < game.getPlayerList().get(playerNum).getNumOfCards(); i++)
+				{
+					if (((BigTwoClient) game).getPlayerID() == playerNum || disclose)
+					{
+						int rank = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getRank();
+						int suit = game.getPlayerList().get(playerNum).getCardsInHand().getCard(i).getSuit();
+						Image cardTemp = new ImageIcon("img/pukeImage/" + suit + "_" + rank + ".png").getImage();
+						g.drawImage(cardTemp, DIST_AVAT_CARD + i * DIST_BET_CARD,
+								selected[i] ? DIST_SELECTED_TOP : DIST_UNSELECTED_TOP, WIDTH_OF_CARD, HEIGHT_OF_CARD, this);
+					}
+					else
+					{
+						Image cardTemp = new ImageIcon("img/pukeImage/back.png").getImage();
+						g.drawImage(cardTemp, DIST_AVAT_CARD + i * DIST_BET_CARD, DIST_UNSELECTED_TOP, WIDTH_OF_CARD,
+								HEIGHT_OF_CARD, this);
+					}
 				}
 			}
 		}
@@ -190,16 +200,23 @@ public class BigTwoTable implements CardGameTable {
 		private static final long serialVersionUID = -8080570155611239398L;
 
 		@Override
-		public void paintComponent(Graphics g) {
+		public void paintComponent(Graphics g) 
+		{
 			Image cardInHand = null;
-			int numOfHand = game.getHandsOnTable().size();
-			if (numOfHand != 0) {
-				for (int i = 0; i < game.getHandsOnTable().get(numOfHand - 1).size(); i++) {
+			int numOfHand = game.getHandsOnTable()!=null ? game.getHandsOnTable().size() : -1;
+			if (numOfHand > 0) 
+			{
+				for (int i = 0; i < game.getHandsOnTable().get(numOfHand - 1).size(); i++) 
+				{
 					int rank = game.getHandsOnTable().get(numOfHand - 1).getCard(i).getRank();
 					int suit = game.getHandsOnTable().get(numOfHand - 1).getCard(i).getSuit();
 					cardInHand = new ImageIcon("img/pukeImage/" + suit + "_" + rank + ".png").getImage();
 					g.drawImage(cardInHand, (i + 3) * DIST_BET_CARD, DIST_UNSELECTED_TOP, this);
 				}
+			}
+			else if(numOfHand<0)
+			{
+				System.out.println("Null HandsOnTable");
 			}
 		}
 	}
@@ -247,7 +264,6 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			frame.setVisible(false);
 			System.exit(0);
 		}
 	}
@@ -508,6 +524,14 @@ public class BigTwoTable implements CardGameTable {
 	@Override
 	public void repaint()
 	{
+		if(((BigTwoClient)game).getPlayerID() != game.getCurrentIdx())
+		{
+			disable();
+		}
+		else
+		{
+			enable();
+		}
 		frame.repaint();
 	}
 
@@ -629,7 +653,7 @@ public class BigTwoTable implements CardGameTable {
 	@Override
 	public void setActivePlayer(int activePlayer)
 	{
-		((BigTwoClient)game).setPlayerID(activePlayer);
+		((BigTwoClient)game).setCurrentIdx(activePlayer);
 	}
 
 	/**
@@ -642,8 +666,8 @@ public class BigTwoTable implements CardGameTable {
 	public String [] promoptConnection()
 	{
 		String name = (String)JOptionPane.showInputDialog(this.frame, "Enter your name","Name",	JOptionPane.PLAIN_MESSAGE,null,null,"PlayeR");
-		((BigTwoClient)game).setPlayerName(name);
 		frame.setTitle("BigTwo CardGame - "+name);
+		((BigTwoClient)game).setPlayerName(name);
 		String [] IPPort = new String[2];
 		IPPort[0] = (String)JOptionPane.showInputDialog(this.frame, "Enter the IP address","Connecting...",JOptionPane.PLAIN_MESSAGE,null,null,"127.0.0.1");
 		IPPort[1] = (String)JOptionPane.showInputDialog(this.frame, "Enter the Port", "Connecting", JOptionPane.PLAIN_MESSAGE,null,null,"3000");
@@ -674,10 +698,6 @@ public class BigTwoTable implements CardGameTable {
 		{
 			case 0: //restart a new game within the same port
 				CardGameMessage ready = new CardGameMessage(CardGameMessage.READY, -1, null);
-				for(CardGamePlayer ply : game.getPlayerList())
-				{
-					ply.removeAllCards();
-				}
 				((BigTwoClient)game).sendMessage(ready);
 				break;
 			default:

@@ -118,13 +118,20 @@ public class BigTwoClient implements CardGame, NetworkGame
 		Thread commuThread = new Thread(commuJob);
 		commuThread.start();
 		//send the JOIN
+		while(playerList.size()==0)
+		{
+			try
+			{
+				Thread.sleep(1);
+			} catch (InterruptedException e) {}
+		}
 		CardGameMessage connecting = new CardGameMessage(CardGameMessage.JOIN, -1, this.playerName);
 		if(!sock.isClosed())	sendMessage(connecting);
+		System.out.println("Send Join");
 		//send the READY
-		connecting.setPlayerID(this.playerID);
-		connecting.setData(null);
-		connecting.setType(CardGameMessage.READY);
+		connecting = new CardGameMessage(CardGameMessage.READY,-1,null);
 		if(!sock.isClosed())	sendMessage(connecting);
+		System.out.println("Send Ready");
 	}
 
 	public void severConnection()
@@ -152,45 +159,54 @@ public class BigTwoClient implements CardGame, NetworkGame
 			case CardGameMessage.JOIN:
 			//When receiving JOIN, i.e. a new comer
 			//should add the player into the player list
+				System.out.println("Received JOIN from Server");
 				CardGamePlayer newPlayer = new CardGamePlayer((String)message.getData());
 				this.playerList.add(message.getPlayerID(),newPlayer);
 				this.numOfPlayers++;
 				break;
 			case CardGameMessage.MOVE:
+				System.out.println("Received MOVE from Server");
 				checkMove(message.getPlayerID(), (int [])message.getData());
 				//currentIdx++; done in checkmove
 				break;
 			case CardGameMessage.MSG:
+				System.out.println("Received MSG from Server");
 				bigTwoTable.printChat((String)message.getData());
 				break;
 			case CardGameMessage.PLAYER_LIST:
+				System.out.println("Received PLAYER_LIST from Server");
 				this.setPlayerID(message.getPlayerID());
 				String [] nameList = (String[])message.getData();
-				if(nameList==null)	break;
 				for(int i=0;i<nameList.length;i++)
 				{
 					playerList.add(new CardGamePlayer(nameList[i]));
 					numOfPlayers++;
 				}
-				break;
+				playerList.get(playerID).setName(playerName);
 			case CardGameMessage.QUIT:
-				this.playerList.remove(message.getPlayerID());
-				this.numOfPlayers--;
-				bigTwoTable.printMsg("Player "+message.getPlayerID()+" quit the game.");
-				if(!endOfGame())
+				System.out.println("Received QUIT from Server: "+message.getPlayerID());
+				if(playerID != message.getPlayerID())
 				{
-					//stop the game
-					this.handsOnTable = null;
-					this.currentIdx = -1;
-					this.deck = null;
+					this.playerList.remove(message.getPlayerID());
+					this.numOfPlayers--;
+					bigTwoTable.printMsg("Player "+message.getPlayerID()+" quit the game.");
+					if(!endOfGame())
+					{
+						//stop the game
+						this.handsOnTable = new ArrayList<Hand>();
+						this.currentIdx = -1;
+						this.deck = null;
+					}
 				}
 				CardGameMessage readyMessage = new CardGameMessage(CardGameMessage.READY, this.playerID, null);
 				sendMessage(readyMessage);
 				break;
 			case CardGameMessage.READY:
+				System.out.println("Received READY from Server");
 				bigTwoTable.printMsg("Player "+message.getPlayerID()+" is ready.");
 				break;
 			case CardGameMessage.START:
+				System.out.println("Received START from Server");
 				start((Deck)message.getData());
 				//bigTwoTable.printMsg("Game start"); done in start
 				break;
@@ -243,6 +259,16 @@ public class BigTwoClient implements CardGame, NetworkGame
 	public int getCurrentIdx()
 	{
 		return this.currentIdx;
+	}
+
+	/**
+	 * specify the current active player
+	 * 
+	 * @param currentIdx the currentIdx to set
+	 */
+	public void setCurrentIdx(int currentIdx)
+	{
+		this.currentIdx = currentIdx;
 	}
 
 	@Override
@@ -432,6 +458,8 @@ public class BigTwoClient implements CardGame, NetworkGame
 			if(gameClient.errorFlag)
 			{
 				gameClient.bigTwoTable.errorPopup(gameClient.errorMsg);
+				gameClient.errorFlag = false;
+				gameClient.errorMsg = "";
 			}
 		}
 	}
@@ -448,7 +476,8 @@ public class BigTwoClient implements CardGame, NetworkGame
 					CardGameMessage messageReceived = (CardGameMessage)ois.readObject();
 					parseMessage(messageReceived);
 				}
-			} catch (Exception e)
+			}
+			catch (Exception e)
 			{
 				e.printStackTrace();
 			}
