@@ -23,6 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -260,23 +261,11 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			disable();
 			clearMsgArea();
-
-			JFrame confirmation = new JFrame("Re-Connecting");
-			JPanel showingPanel = new JPanel();
-			JTextPane text = new JTextPane();
-			text.setText("Restarting, please wait...");
-			showingPanel.add(text);
-			confirmation.add(showingPanel);
-			confirmation.setSize(600, 100);
-			confirmation.setLocation(700, 500);
-			confirmation.setVisible(true);
-
+			JOptionPane.showInputDialog(frame, "Re-Connecting to "+((BigTwoClient)game).getServerIP()+":"+((BigTwoClient)game).getServerPort()+", please wait","Connecting",JOptionPane.WARNING_MESSAGE);
 			((BigTwoClient) game).severConnection();
 			((BigTwoClient) game).makeConnection();
 			disclose = false;
-			confirmation.setVisible(false);
 		}
 	}
 
@@ -286,7 +275,15 @@ public class BigTwoTable implements CardGameTable {
 		@Override
 		public void keyTyped(KeyEvent e)
 		{
-			//TODO
+			char keyChar = e.getKeyChar();
+			if(keyChar=='\n')
+			{
+				//send the message out
+				String msg = inputField.getText();
+				CardGameMessage toSend = new CardGameMessage(CardGameMessage.MSG, ((BigTwoClient)game).getPlayerID(), msg);
+				((BigTwoClient)game).sendMessage(toSend);
+				inputField.setText(null);
+			}
 		}
 
 		@Override
@@ -373,7 +370,7 @@ public class BigTwoTable implements CardGameTable {
 		inputLabel = new JLabel("Message");
 		inputLabel.setFont(menuFont);
 		inputField = new JTextField();
-		inputField.setMinimumSize(new Dimension(20, 300));
+		inputField.setMinimumSize(new Dimension(35, 300));
 
 		buttonPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -392,6 +389,7 @@ public class BigTwoTable implements CardGameTable {
 		buttonPanel.add(passButton, c);
 
 		c.gridx = 2;
+		c.insets.left = 200;
 		c.insets.right = 0;
 		buttonPanel.add(inputLabel, c);
 
@@ -400,16 +398,25 @@ public class BigTwoTable implements CardGameTable {
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.ipadx = 500;
 		buttonPanel.add(inputField, c);
+		buttonPanel.setSize(1500, 50);
 		
 		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\n");
 		textArea.setFont(msgFont);
 		chatArea = new JTextArea("Chat Box: BigTwo\t\t\t\t\n");
 		chatArea.setFont(msgFont);
 		textPanel = new JPanel();
-		textPanel.add(textArea);
-		textPanel.add(chatArea);
 
-		textPanel.setLayout(new BoxLayout(this.textPanel,BoxLayout.Y_AXIS));
+		textPanel.setLayout(new GridBagLayout());
+
+		GridBagConstraints g = new GridBagConstraints();
+		g.gridx = 0;g.gridy = 0;
+		g.gridheight = 1; g.gridwidth = 1;
+		g.ipady = 400;
+		g.insets = new Insets(0, 10, 30, 10);
+		textPanel.add(textArea,g);
+		g.gridy = 1;
+		g.insets.top = 30; g.insets.bottom = 0;
+		textPanel.add(chatArea,g);
 
 		frame.add(cardBoard);
 		frame.add(gameMenuBar, BorderLayout.NORTH);
@@ -507,7 +514,7 @@ public class BigTwoTable implements CardGameTable {
 	@Override
 	public void printMsg(String msg)
 	{
-		if(numOfPrints >= 20) 
+		if(numOfPrints >= 10) 
 		{
 			clearMsgArea();
 			this.textArea.append("New Game: BigTwo\t\t\t\t\n");
@@ -607,14 +614,75 @@ public class BigTwoTable implements CardGameTable {
 	/**
 	 * Print message to the chatting block
 	 */
-	public void printChat(String str)
+	public void printChat(String msg)
 	{
-		//TODO
+		if(numOfPrints >= 10) 
+		{
+			clearMsgArea();
+			this.chatArea.append("New Game: BigTwo\t\t\t\t\n");
+			numOfPrints = 0;
+		}
+		this.chatArea.append(msg+"\n");
+		numOfPrints ++;
 	}
 
 	@Override
 	public void setActivePlayer(int activePlayer)
 	{
 		((BigTwoClient)game).setPlayerID(activePlayer);
+	}
+
+	/**
+	 * Get the user input of IP address and Port
+	 * 
+	 * @return
+	 * 		String array, 0----IP addr
+	 * 					  1----Port
+	 */
+	public String [] promoptConnection()
+	{
+		String name = (String)JOptionPane.showInputDialog(this.frame, "Enter your name","Name",	JOptionPane.PLAIN_MESSAGE,null,null,"PlayeR");
+		((BigTwoClient)game).setPlayerName(name);
+		frame.setTitle("BigTwo CardGame - "+name);
+		String [] IPPort = new String[2];
+		IPPort[0] = (String)JOptionPane.showInputDialog(this.frame, "Enter the IP address","Connecting...",JOptionPane.PLAIN_MESSAGE,null,null,"127.0.0.1");
+		IPPort[1] = (String)JOptionPane.showInputDialog(this.frame, "Enter the Port", "Connecting", JOptionPane.PLAIN_MESSAGE,null,null,"3000");
+		return IPPort;
+	}
+
+	/**
+	 * When an error occur and is detected, throw the error without quiting the programme
+	 * 
+	 * @param errorMsg
+	 * 			the info of the error to be shown
+	 */
+	public void errorPopup(String errorMsg)
+	{
+		JOptionPane.showMessageDialog(this.frame, errorMsg, "Error!", JOptionPane.ERROR_MESSAGE);
+	}
+
+	public void reJoinGame()
+	{
+		String [] options = {"ReJoin", "Quit"};
+		int n = JOptionPane.showOptionDialog(this.frame, 
+											"Game is end.\nDo you want to start a new game? ",
+											"Again?",
+											JOptionPane.YES_NO_OPTION,JOptionPane.INFORMATION_MESSAGE,
+											null,
+											options,options[0]);
+		switch (n)
+		{
+			case 0: //restart a new game within the same port
+				CardGameMessage ready = new CardGameMessage(CardGameMessage.READY, -1, null);
+				for(CardGamePlayer ply : game.getPlayerList())
+				{
+					ply.removeAllCards();
+				}
+				((BigTwoClient)game).sendMessage(ready);
+				break;
+			default:
+				System.exit(0);
+				break;
+		}
 	}
 }

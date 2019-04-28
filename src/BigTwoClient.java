@@ -325,6 +325,12 @@ public class BigTwoClient implements CardGame, NetworkGame
 			bigTwoTable.disable();
 			bigTwoTable.discloseAllPlayers();
 			bigTwoTable.repaint();
+			try
+			{
+				Thread.sleep(500);
+			} catch (Exception e) {}
+			this.setPlayerID(-1);
+			bigTwoTable.reJoinGame();
 		}
 	}
 
@@ -417,8 +423,18 @@ public class BigTwoClient implements CardGame, NetworkGame
 		//BigTwoDeck deck = new BigTwoDeck(); done in parseMessage, downStreamThread
 		//game.start(deck); done in parseMessage, downStreamThread
 		//gameClient.makeConnection(); invoke by dialogue
+		String [] IPPort = gameClient.bigTwoTable.promoptConnection();
+		gameClient.setServerIP(IPPort[0]);
+		gameClient.setServerPort(Integer.parseInt(IPPort[1]));
+		gameClient.makeConnection();
+		while(true)
+		{
+			if(gameClient.errorFlag)
+			{
+				gameClient.bigTwoTable.errorPopup(gameClient.errorMsg);
+			}
+		}
 	}
-
 	class ServerHandler implements Runnable
 	{
 		@Override
