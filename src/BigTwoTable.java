@@ -225,6 +225,9 @@ public class BigTwoTable implements CardGameTable {
 			int numOfHand = game.getHandsOnTable()!=null ? game.getHandsOnTable().size() : -1;
 			if (numOfHand > 0) 
 			{
+				g.setColor(Color.WHITE);
+				g.setFont(menuFont);
+				g.drawString(game.getHandsOnTable().get(numOfHand-1).getPlayer().getName(), 0, DIST_BET_CARD/2);
 				for (int i = 0; i < game.getHandsOnTable().get(numOfHand - 1).size(); i++) 
 				{
 					int rank = game.getHandsOnTable().get(numOfHand - 1).getCard(i).getRank();
@@ -299,6 +302,7 @@ public class BigTwoTable implements CardGameTable {
 		public void actionPerformed(ActionEvent e)
 		{
 			clearMsgArea();
+			textArea.append("New Game: BigTwo\t\t\t\t\n");
 			JOptionPane.showInputDialog(frame, "Re-Connecting to "+((BigTwoClient)game).getServerIP()+":"+((BigTwoClient)game).getServerPort()+", please wait","Connecting",JOptionPane.WARNING_MESSAGE);
 			((BigTwoClient) game).severConnection();
 			((BigTwoClient) game).makeConnection();
@@ -443,8 +447,12 @@ public class BigTwoTable implements CardGameTable {
 		buttonPanel.setSize(1500, 50);
 		
 		textArea = new JTextArea("New Game: BigTwo\t\t\t\t\n");
+		textArea.setDisabledTextColor(Color.BLACK);
+		textArea.setEnabled(false);
 		textArea.setFont(msgFont);
 		chatArea = new JTextArea("Chat Box: BigTwo\t\t\t\t\n");
+		chatArea.setDisabledTextColor(Color.BLACK);
+		chatArea.setEnabled(false);
 		chatArea.setFont(msgFont);
 		textPanel = new JPanel();
 
@@ -607,12 +615,8 @@ public class BigTwoTable implements CardGameTable {
 		int playerWithD3 = -1;
 		setActivePlayer(playerWithD3);
 		game.getHandsOnTable().clear();
-		for(int i=0;i<TOTAL_NUM_OF_PLAYERS;i++)
-		{
-			game.getPlayerList().get(i).removeAllCards();
-		}
 		frame.repaint();
-		game.getDeck().shuffle();
+
 		for(int i=0;i<MAX_CARD_IN_HAND;i++)
 		{
 			for(int j=0;j<TOTAL_NUM_OF_PLAYERS;j++)

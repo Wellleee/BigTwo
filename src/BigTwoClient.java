@@ -163,10 +163,11 @@ public class BigTwoClient implements CardGame, NetworkGame
 			//should add the player into the player list
 				System.out.println("Received JOIN from Server");
 				this.playerList.get(message.getPlayerID()).setName((String)message.getData());
+				numOfPlayers++;
 				break;
 			case CardGameMessage.MOVE:
 				System.out.println("Received MOVE from Server");
-				checkMove(message.getPlayerID(), (int [])message.getData());
+				checkMove(this.getCurrentIdx(), (int [])message.getData());
 				//currentIdx++; done in checkmove
 				break;
 			case CardGameMessage.MSG:
@@ -182,7 +183,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 					playerList.add(new CardGamePlayer(nameList[i]));
 					if(nameList[i]!=null)	numOfPlayers++;
 				}
-				playerList.get(playerID).setName(playerName);
+				System.out.println("Player List received by "+playerName+playerList.size());
 			case CardGameMessage.QUIT:
 				System.out.println("Received QUIT from Server: "+message.getPlayerID());
 				if(playerID != message.getPlayerID())
@@ -294,6 +295,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 	@Override
 	public void checkMove(int playerID, int[] cardIdx)
 	{
+		System.out.print("Checking move by player"+playerID);
 		CardGamePlayer player = playerList.get(playerID);
 		CardList cardInHand = player.play(cardIdx);
 		boolean legalMove = false;
@@ -302,6 +304,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			Hand hand = composeHand(player, cardInHand);
 			if(hand != null) //not invalid
 			{
+				System.out.print(":  Valid Move");
 				if(handsOnTable.size()==0)//first player
 				{
 					legalMove = hand.contains(new BigTwoCard(0, 2))?true:false;
@@ -315,6 +318,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			}//end of legal checking
 			if(legalMove)
 			{
+				System.out.println(":  legal Move");
 				handsOnTable.add(hand);
 				player.removeCards(cardInHand);
 				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: {"+hand.getType()+"} ");
@@ -323,18 +327,22 @@ public class BigTwoClient implements CardGame, NetworkGame
 			}
 			else
 			{
+				System.out.println(":  illegal Move");
 				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: Not a legal move");
 			}//end of a non-pass moving
 		}
 		else //pass
 		{
+			System.out.print("Check pass by player "+playerID);
 			if(handsOnTable.size()!=0 && playerList.get(playerID) != handsOnTable.get(handsOnTable.size()-1).getPlayer())
 			{
+				System.out.println(":  legal Pass");
 				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: {Pass}");
-				bigTwoTable.setActivePlayer((playerID+1)%4);
+				bigTwoTable.setActivePlayer((playerID+1)%TOTAL_NUM_OF_PLAYERS);
 			}
 			else
 			{
+				System.out.println(": illegal Pass");
 				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: Not a legal pass");
 			}
 		}
