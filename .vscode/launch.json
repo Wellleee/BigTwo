@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - BigTwoServer",
+            "request": "launch",
+            "mainClass": "BigTwoServer",
+            "projectName": "Big Two"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - BigTwoClient",
             "request": "launch",
             "mainClass": "BigTwoClient",

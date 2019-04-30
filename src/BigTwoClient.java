@@ -328,7 +328,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			else
 			{
 				System.out.println(":  illegal Move");
-				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: Not a legal move");
+				if(this.playerID==playerID)	bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: Not a legal move");
 			}//end of a non-pass moving
 		}
 		else //pass
@@ -343,7 +343,7 @@ public class BigTwoClient implements CardGame, NetworkGame
 			else
 			{
 				System.out.println(": illegal Pass");
-				bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: Not a legal pass");
+				if(this.playerID==playerID)	bigTwoTable.printMsg("Player <"+playerList.get(playerID).getName()+">: Not a legal pass");
 			}
 		}
 		//bigTwoTable.repaint() ---- no need, already included in setActiveplayer
